@@ -1,0 +1,17 @@
+node_modules/
+dist/
+package-lock.json
+
+# Credentials. Plain `.env` was NOT covered by the .env.local rules below and
+# would have been committed with a live Deepgram key in it.
+.env
+.env.*
+!.env.example
+.env.local
+.env.*.local
+
+*.log
+.DS_Store
+.vite/
+*.ehpk
+*.bak

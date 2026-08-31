@@ -1,0 +1,137 @@
+// Claude Code remote control — the machine-side half.
+//
+// The glasses cannot run Claude Code; they are a display driven by the phone.
+// So Claude Code runs HERE and this server is the doorway to it.
+//
+//   GET  /health                      -> liveness, unauthenticated
+//   POST /pair   {code, deviceName}   -> {token}   (code comes from the console)
+//   POST /ask    {prompt}             -> {ok, text}   Authorization: Bearer <token>
+//
+// Reachable from anywhere via Tailscale. Because that is remote code execution
+// by design, /ask is token-gated — see auth.mjs, which follows the same model
+// as grokrc's src/daemon/auth.ts.
+//
+// Auth to Anthropic: none of its own. It shells out to the `claude` CLI, which
+// uses the login already on this machine. No API key is stored or needed.
+
+import { createServer } from 'node:http'
+import { execFile } from 'node:child_process'
+import { createPairingCode, redeemPairingCode, verifyToken } from './auth.mjs'
+
+const PORT = Number(process.env.BRIDGE_PORT ?? 8787)
+// Loopback by default: Tailscale proxies in, so binding wider is needless exposure.
+const HOST = process.env.BRIDGE_HOST ?? '127.0.0.1'
+const TIMEOUT_MS = Number(process.env.BRIDGE_TIMEOUT_MS ?? 180_000)
+const MAX_PROMPT = 4000
+
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+const send = (res, code, obj) => {
+  res.writeHead(code, { 'Content-Type': 'application/json', ...CORS })
+  res.end(JSON.stringify(obj))
+}
+
+const readBody = (req) =>
+  new Promise((resolve, reject) => {
+    let data = ''
+    req.on('data', (c) => {
+      data += c
+      if (data.length > 1e6) { req.destroy(); reject(new Error('body too large')) }
+    })
+    req.on('end', () => resolve(data))
+    req.on('error', reject)
+  })
+
+const readJson = async (req) => {
+  try { return JSON.parse(await readBody(req)) } catch { return null }
+}
+
+const bearer = (req) => {
+  const h = req.headers.authorization ?? ''
+  return h.startsWith('Bearer ') ? h.slice(7) : ''
+}
+
+function askClaude(prompt) {
+  return new Promise((resolve, reject) => {
+    execFile(
+      'claude',
+      ['-p', prompt, '--output-format', 'text'],
+      { timeout: TIMEOUT_MS, maxBuffer: 8 * 1024 * 1024 },
+      (err, stdout, stderr) => {
+        if (err) return reject(new Error(stderr?.trim() || err.message))
+        resolve(stdout.trim())
+      },
+    )
+  })
+}
+
+const server = createServer(async (req, res) => {
+  if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end() }
+
+  if (req.method === 'GET' && req.url === '/health') {
+    return send(res, 200, { ok: true, service: 'g2-claude-bridge' })
+  }
+
+  if (req.method === 'POST' && req.url === '/pair') {
+    const body = await readJson(req)
+    if (!body) return send(res, 400, { ok: false, error: 'body must be JSON' })
+    const token = await redeemPairingCode(String(body.code ?? '').toUpperCase().trim(), body.deviceName)
+    if (!token) return send(res, 401, { ok: false, error: 'invalid or expired code' })
+    console.log(`[pair] paired "${body.deviceName ?? 'device'}"`)
+    return send(res, 200, { ok: true, token })
+  }
+
+  // Device-side diagnostics. The glasses have no console we can read from here,
+  // so the app reports its own lifecycle and this prints it next to the asks.
+  if (req.method === 'POST' && req.url === '/log') {
+    const device = await verifyToken(bearer(req))
+    if (!device) return send(res, 401, { ok: false, error: 'unauthorized' })
+    const body = await readJson(req)
+    console.log(`[dev ] (${device.name}) ${String(body?.msg ?? '').slice(0, 300)}`)
+    return send(res, 200, { ok: true })
+  }
+
+  if (req.method === 'POST' && req.url === '/ask') {
+    const device = await verifyToken(bearer(req))
+    if (!device) return send(res, 401, { ok: false, error: 'unauthorized — pair this device first' })
+
+    const body = await readJson(req)
+    if (!body) return send(res, 400, { ok: false, error: 'body must be JSON' })
+    const prompt = body.prompt
+    if (typeof prompt !== 'string' || !prompt.trim()) {
+      return send(res, 400, { ok: false, error: 'prompt is required' })
+    }
+    if (prompt.length > MAX_PROMPT) {
+      return send(res, 400, { ok: false, error: `prompt over ${MAX_PROMPT} chars` })
+    }
+
+    const started = Date.now()
+    // Tailscale hands us the tailnet peer in this header; a LAN request has no
+    // such header and shows the 192.168.x address. That difference is the only
+    // way to tell "works at home" from "works anywhere" after the fact.
+    const via = req.headers['tailscale-user-login']
+      ? 'tailnet'
+      : (req.socket.remoteAddress ?? 'unknown')
+    console.log(`[ask ] (${device.name} via ${via}) ${JSON.stringify(prompt.slice(0, 80))}`)
+    try {
+      const text = await askClaude(prompt)
+      console.log(`[ok  ] ${text.length} chars in ${Date.now() - started}ms`)
+      return send(res, 200, { ok: true, text, ms: Date.now() - started })
+    } catch (e) {
+      console.error(`[err ] ${e.message}`)
+      return send(res, 502, { ok: false, error: e.message })
+    }
+  }
+
+  send(res, 404, { ok: false, error: 'not found' })
+})
+
+server.listen(PORT, HOST, () => {
+  console.log(`g2-claude-bridge listening on ${HOST}:${PORT}`)
+  const { code } = createPairingCode()
+  console.log(`\n  pairing code: ${code}    (valid 5 minutes, single use)\n`)
+})
