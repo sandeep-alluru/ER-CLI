@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="ER-CLI">
+  <rect width="128" height="128" rx="28" fill="#101c18"/>
+  <g fill="none" stroke="#88efba" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M17 50h36l-3 27c-1 10-27 10-29 0zM75 50h36l-4 27c-2 10-28 10-29 0zM53 57c7-7 15-7 22 0"/>
+    <path d="m31 60 6 6-6 6m10 1h4m40-13 6 6-6 6m10 1h4" stroke-width="3"/>
+  </g>
+</svg>

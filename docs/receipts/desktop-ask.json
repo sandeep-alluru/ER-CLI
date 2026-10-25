@@ -1,0 +1,19 @@
+{
+  "date": "2026-10-25",
+  "result": "success",
+  "scope": "Chromium app to loopback HTTP bridge to installed Claude Code",
+  "hardware_tested": false,
+  "samples": 1,
+  "prompt": "Read README.md and bridge/server.mjs. Answer in under 65 words, plain text, addressing the reader as you. Explain what ER-CLI does, where Claude runs, and the unverified G2 limitation. Use only second person and plain product language. Do not edit files or run shell commands.",
+  "response": "ER-CLI puts your Claude Code agent on Even G2 glasses. You type a question on your paired phone, and the app sends it to a small Node bridge on your own computer. Claude runs there \u2014 the bridge shells out to your installed `claude` CLI using your existing login, so no API key and no hosted relay. The answer comes back paginated for the G2 display. Unverified: the installed phone-to-glasses Ask path on real hardware.",
+  "characters": 419,
+  "elapsed_ms": 12625,
+  "bridge_elapsed_ms": 12110,
+  "claude_version": "2.1.220 (Claude Code)",
+  "pairing": "real single-use code; demonstration device revoked afterward",
+  "video": "assets/desktop-demo.mp4",
+  "source_sha256": {
+    "bridge/server.mjs": "cb47eb68a3979b00cd0b34f310cd53110b5c5b0b7482c5aeea20ff10fcfc9fd9",
+    "src/phone.ts": "a8a45f3dcf066aac6a15a532238356799ddb66f0bc98330714e877d372bc10f4"
+  }
+}

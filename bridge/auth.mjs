@@ -1,9 +1,8 @@
 /**
  * Pairing and device tokens for the G2 Claude bridge.
  *
- * Same threat model as grokrc's src/daemon/auth.ts, and deliberately the same
- * shape: driving Claude Code remotely IS remote code execution, so this is
- * load-bearing rather than ceremony.
+ * Remote prompts can invoke local agent tools, so every Ask must authenticate
+ * a paired device before executing the CLI.
  *
  *  - Pairing codes are single-use and expire in minutes.
  *  - Only a SHA-256 hash of each device token is persisted, so a leaked config

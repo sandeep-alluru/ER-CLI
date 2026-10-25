@@ -30,11 +30,9 @@ export function mountPhoneUI(root: HTMLElement, cb: PhoneCallbacks): void {
   /**
    * The bridge address, editable on the device.
    *
-   * An installed build cannot derive this — its `location` is the Even Hub
-   * host, not the dev machine — so it falls back to the tailnet URL. When that
-   * is wrong (VPN off, different network) the only symptom is "Load failed",
-   * which says nothing about where it tried. Showing the address, and letting
-   * it be corrected here, turns a dead end into something fixable on the spot.
+   * An installed build uses the Even Hub host rather than the bridge machine.
+   * Configure an HTTPS address reachable from the phone. A saved address takes
+   * precedence over the build-time default; Save & test checks reachability.
    */
   function bridgeUrlRow(): HTMLElement {
     const field = el('input', {

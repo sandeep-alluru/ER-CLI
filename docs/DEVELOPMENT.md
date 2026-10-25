@@ -1,6 +1,6 @@
 # Development and verification
 
-Use the [README first-run path](../README.md) for installation. Dependencies are
+Use the [setup guide](SETUP.md) for installation. Dependencies are
 locked by `package-lock.json`; use `npm ci` for a clean installation.
 
 | Command | Result |
@@ -57,13 +57,20 @@ This URL is public build configuration, never a place for credentials. A saved
 phone URL overrides it. `TAILNET_HOST` can allow a specific proxy hostname when
 running Vite through a tailnet HTTPS proxy; it does not configure a proxy itself.
 
-## Fresh-clone acceptance
+## Clean build
 
-Clone the remote into an empty directory and run the README commands. Record the
-exact commit, Node/npm versions and separate results for `npm ci`,
-`npm run typecheck`, `npm run build`, and `npm run pack`. Re-run after dependency
-or packaging fixes. Internal acceptance evidence lives in `LAUNCH-PACKET.md`.
+```bash
+npm ci
+npm run typecheck
+npm run build
+npm run pack
+npm audit
+```
 
-The original workstation helpers mentioned in agent instructions are not project
-runtime dependencies. Historical notes do not establish that services are running
-on a new clone.
+`npm run pack` creates `g2-claude-0.1.3.ehpk`. It does not install the app on a
+phone or test an authenticated Claude request. Use the [setup guide](SETUP.md)
+to connect the app and the [bridge guide](BRIDGE.md) to diagnose requests.
+
+[SDK package metadata](https://www.npmjs.com/package/@evenrealities/even_hub_sdk/v/0.0.14) ·
+[Simulator](https://www.npmjs.com/package/@evenrealities/evenhub-simulator) ·
+[App manifest](../app.json) · [Bridge defaults](../bridge/server.mjs).

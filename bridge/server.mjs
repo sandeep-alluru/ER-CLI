@@ -7,9 +7,8 @@
 //   POST /pair   {code, deviceName}   -> {token}   (code comes from the console)
 //   POST /ask    {prompt}             -> {ok, text}   Authorization: Bearer <token>
 //
-// Reachable from anywhere via Tailscale. Because that is remote code execution
-// by design, /ask is token-gated — see auth.mjs, which follows the same model
-// as grokrc's src/daemon/auth.ts.
+// Put an HTTPS proxy in front of the loopback listener for phone access.
+// /ask requires a device token because prompts can invoke local agent tools.
 //
 // Auth to Anthropic: none of its own. It shells out to the `claude` CLI, which
 // uses the login already on this machine. No API key is stored or needed.

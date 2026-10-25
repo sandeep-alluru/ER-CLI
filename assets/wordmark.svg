@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 128" role="img" aria-label="ER-CLI">
+  <rect width="640" height="128" rx="18" fill="#101c18"/>
+  <g fill="none" stroke="#88efba" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M20 46h34l-3 28c-1 9-25 9-27 0zM76 46h34l-4 28c-2 9-26 9-27 0zM54 53c7-7 15-7 22 0"/>
+    <path d="m32 57 6 6-6 6m10 1h4m45-13 6 6-6 6m10 1h4" stroke-width="3"/>
+  </g>
+  <text x="146" y="91" fill="#e8fff1" font-family="ui-monospace,monospace" font-size="77" font-weight="700" letter-spacing="3">ER-CLI</text>
+</svg>

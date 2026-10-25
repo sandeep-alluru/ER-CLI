@@ -10,7 +10,8 @@
     "pack": "npm run build && evenhub pack app.json dist --sdk-ver 0.0.14 -o g2-claude-0.1.3.ehpk",
     "simulate": "evenhub-simulator http://localhost:5173",
     "bridge": "node bridge/server.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check:evidence": "node scripts/check-evidence.mjs"
   },
   "dependencies": {
     "@evenrealities/even_hub_sdk": "^0.0.14",

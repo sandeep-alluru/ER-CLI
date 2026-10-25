@@ -1,10 +1,7 @@
 // Persistent key/value storage.
 //
-// Browser `localStorage` does NOT survive an app exit inside the Even Hub
-// WebView — the device token vanished every launch and the app demanded
-// pairing again. `bridge.setLocalStorage` / `getLocalStorage` are the SDK's own
-// persistence and do survive, so they are the real store whenever a bridge is
-// present. The browser is only the fallback, for running this in a desktop tab.
+// Use SDK storage to preserve device state across app exits in Even Hub.
+// Browser localStorage is the fallback for desktop use.
 
 interface Kv {
   get(key: string): Promise<string>
