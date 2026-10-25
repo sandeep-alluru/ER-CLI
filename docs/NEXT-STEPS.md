@@ -2,7 +2,7 @@
 
 Checkpointed 2026-08-27 ~04:05 UTC, after session `8325f9dd` hung at 04:03:16Z.
 Reconstructed from BOTH session logs in
-`~/.claude/projects/-home-clawer-samurai-1-AgentHub-even-realities/`
+`~/.claude/projects/-home-<node>-AgentHub-even-realities/`
 (2 of 2 files, 94 of 94 tool calls, 7 of 7 human prompts — full coverage).
 
 ## Where the last session stopped
@@ -16,10 +16,10 @@ mid-write; no partial edits on disk.
 | Fact | Evidence |
 |---|---|
 | Vite dev server UP | `ss -tlnp` → `*:5173` pid 292475; survived the hang |
-| Reachable on LAN | `curl -o /dev/null -w %{http_code}` → `200` on 192.168.68.64, 192.168.68.58, 127.0.0.1 |
-| Two NICs, same /22 | enp0s31f6 192.168.68.64, wlp5s0 192.168.68.58 |
-| QR cached | `~/.config/evenhub/qr.yaml` → http://192.168.68.64:5173/ |
-| `g2-qr.png` valid | 462×462 RGBA, encodes `http://192.168.68.64:5173` |
+| Reachable on LAN | `curl -o /dev/null -w %{http_code}` → `200` on <lan-ip>, <lan-ip-2>, 127.0.0.1 |
+| Two NICs, same /22 | enp0s31f6 <lan-ip>, wlp5s0 <lan-ip-2> |
+| QR cached | `~/.config/evenhub/qr.yaml` → http://<lan-ip>:5173/ |
+| `g2-qr.png` | removed in release prep — it encoded this machine's LAN dev address; regenerate with `npx evenhub qr` |
 | **No phone has connected** | every peer in `ss -tan sport/dport :5173` is this host; every client in `vite-live.log` logged `[EvenAppBridge] postMessage: Flutter handler not available`, which fires only OUTSIDE the Even Hub webview |
 | **`evenhub login` never run** | `~/.config/evenhub/` holds only `qr.yaml` + `simulator.yaml` — no credential file |
 | `app.json` still placeholder | `package_id: com.example.evenhubminimal` |
@@ -50,7 +50,7 @@ The `npm i -g qrcode` detour the last session took was unnecessary.
 3. `evenhub qr -e` (server is already up — do not restart it).
 4. Phone → developer section → Scan QR → point the PHONE camera at the monitor.
    The G2 has no camera; the phone always does the scanning.
-5. If it scans but hangs: phone must be on the same Wi-Fi as 192.168.68.0/22, and
+5. If it scans but hangs: phone must be on the same Wi-Fi as <lan-subnet>, and
    AP isolation / client isolation must be OFF on the router.
 
 ## "Claude Code on the glasses" — what is actually buildable
@@ -151,11 +151,11 @@ drives the agent over ACP, which the Claude Code CLI does not speak. The only
 
 ### Tailscale facts (verified 2026-08-29)
 
-- This node: `clawer-samurai-1`, `100.90.129.41`,
-  MagicDNS `clawer-samurai-1.tail1306c8.ts.net`, Online: true
+- This node: `<node>`, `<tailnet-ip>`,
+  MagicDNS `<node>.<tailnet>.ts.net`, Online: true
 - `tailscale serve` ALREADY configured: `/` -> `http://127.0.0.1:4319`
   (that port is pid 4447 — grokrc's daemon). Tailnet-only, not Funnel.
-- Owner's `iphone-15-pro-max` is on the tailnet (`100.86.70.71`) but was last
+- Owner's `<phone>` is on the tailnet (`<phone-tailnet-ip>`) but was last
   seen 4 d ago — Tailscale must be running on the phone.
 - tailscale 1.102.2 supports `--set-path`.
 
@@ -169,13 +169,13 @@ Additive: leaves `/` -> 4319 (grokrc) untouched. Reversible with
 `tailscale serve --set-path /g2 off`. Not yet run — it changes serve config that
 grokrc depends on, so it waits for the owner.
 
-Result would be `https://clawer-samurai-1.tail1306c8.ts.net/g2/` reachable from
+Result would be `https://<node>.<tailnet>.ts.net/g2/` reachable from
 anywhere a device is on the tailnet.
 
 **UNVERIFIED, needs a real test:** whether the Even Hub phone webview routes
 through the iOS Tailscale VPN profile. If it does, the glasses app can be served
 from the tailnet URL and works anywhere, not just the home LAN. If it does not,
-the glasses stay pinned to `192.168.68.64:5173` at home while the phone-side
+the glasses stay pinned to `<lan-ip>:5173` at home while the phone-side
 remote control still works anywhere.
 
 ## UPDATE 2026-08-29 (later) — glasses UI built, remote control live
@@ -183,9 +183,9 @@ remote control still works anywhere.
 ### Tailscale layout (owner approved, applied)
 
 ```
-https://clawer-samurai-1.tail1306c8.ts.net       /    -> 127.0.0.1:4319   grokrc (pre-existing, untouched)
+https://<node>.<tailnet>.ts.net       /    -> 127.0.0.1:4319   grokrc (pre-existing, untouched)
                                                  /g2  -> 127.0.0.1:8787   Claude bridge
-https://clawer-samurai-1.tail1306c8.ts.net:8443  /    -> 127.0.0.1:5173   the glasses app (vite)
+https://<node>.<tailnet>.ts.net:8443  /    -> 127.0.0.1:5173   the glasses app (vite)
 ```
 
 **Why the app is a whole HTTPS port and not a `--set-path /app` mount:** vite
@@ -240,7 +240,7 @@ Pre-change config saved at `docs/tailscale-serve-before.json`.
   be paired because its WebView has its own localStorage and the automation API
   offers taps/scrolls only — no text entry.
 - Whether the Even Hub WebView rides the iOS Tailscale VPN. If yes, point the
-  glasses app at `https://clawer-samurai-1.tail1306c8.ts.net:8443/` and it works
+  glasses app at `https://<node>.<tailnet>.ts.net:8443/` and it works
   anywhere. If no, the glasses stay on the LAN URL at home.
 
 ### Known gap (deliberate, not an oversight)
@@ -255,7 +255,7 @@ control port that Tailscale does not proxy, mirroring grokrc's control socket.
 ### Where it actually got to
 
 Working and verified:
-- Bridge live at `https://clawer-samurai-1.tail1306c8.ts.net/g2`, answers real
+- Bridge live at `https://<node>.<tailnet>.ts.net/g2`, answers real
   Claude Code from any tailnet device (curl-verified).
 - Phone paired, and the pairing now PERSISTS across app exits.
 - Glasses draw text — owner confirmed seeing the app's "Paired" screen.
@@ -328,7 +328,7 @@ as mixed content — the identical bug that broke my own app earlier. Fixed with
 tailscale serve --bg --https=8444 http://127.0.0.1:8790
 ```
 
-Owner enters `https://clawer-samurai-1.tail1306c8.ts.net:8444` + the passphrase
+Owner enters `https://<node>.<tailnet>.ts.net:8444` + the passphrase
 in the app's Settings card. Verified end to end: 401 without token, and with the
 token `/api/sessions` returns live sessions — including this very Claude Code
 session (`title: "even-realities"`, `model: claude-opus-5[1m]`).

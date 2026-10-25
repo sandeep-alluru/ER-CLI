@@ -12,16 +12,23 @@ const TOKEN_KEY = 'g2claude.token'
 const URL_KEY = 'g2claude.bridgeUrl'
 
 /**
- * The bridge over Tailscale. This is the default for an INSTALLED app because
- * an installed .ehpk is not served from the dev server — its `location` is the
- * Even Hub host, not this machine — so there is nothing useful to derive a URL
- * from. It is also HTTPS, which matters: a secure page cannot call a plain
- * http:// endpoint, so the LAN address fails as mixed content even at home.
+ * Default bridge address for an INSTALLED app. An installed .ehpk is not
+ * served from the dev server — its `location` is the Even Hub host, not the
+ * bridge machine — so there is nothing useful to derive a URL from.
+ *
+ * Bake your own bridge address in at build time:
+ *
+ *   VITE_BRIDGE_URL=https://<your-node>.<your-tailnet>.ts.net/g2 npm run build
+ *
+ * It must be HTTPS: a secure page cannot call a plain http:// endpoint, so a
+ * LAN address fails as mixed content even at home. The address can also be
+ * set on the device (Bridge address, on the pairing screen) — a saved
+ * address wins over this default.
  */
-const TAILNET_BRIDGE = 'https://clawer-samurai-1.tail1306c8.ts.net/g2'
+const DEFAULT_BRIDGE = import.meta.env.VITE_BRIDGE_URL ?? 'http://localhost:8787'
 
 /** Resolved once at startup so the rest of the app can read it synchronously. */
-let base = TAILNET_BRIDGE
+let base = DEFAULT_BRIDGE
 let token = ''
 
 export const bridgeBase = (): string => base
@@ -33,8 +40,8 @@ export const isPaired = (): boolean => token.length > 0
  *
  *   1. An explicit override, if one was saved on this device.
  *   2. Dev server on :5173  -> bridge is :8787 on the same host.
- *   3. Tailnet app on :8443 -> bridge is /g2 on the same node, same origin.
- *   4. Anything else (an installed build) -> the tailnet URL.
+ *   3. App served on :8443  -> bridge is /g2 on the same host, same origin.
+ *   4. Anything else (an installed build) -> the configured default above.
  */
 export async function loadState(): Promise<void> {
   token = await storeGet(TOKEN_KEY)
@@ -47,7 +54,7 @@ export async function loadState(): Promise<void> {
   const { protocol, hostname, port } = location
   if (port === '5173') base = `${protocol}//${hostname}:8787`
   else if (port === '8443') base = `${protocol}//${hostname}/g2`
-  else base = TAILNET_BRIDGE
+  else base = DEFAULT_BRIDGE
 }
 
 export async function setBridgeUrl(url: string): Promise<void> {

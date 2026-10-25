@@ -5,7 +5,7 @@
     }
   },
   "Web": {
-    "clawer-samurai-1.tail1306c8.ts.net:443": {
+    "<node>.<tailnet>.ts.net:443": {
       "Handlers": {
         "/": {
           "Proxy": "http://127.0.0.1:4319"

@@ -2,8 +2,8 @@ import { defineConfig } from 'vite'
 
 // The dev server is reached two ways and both have to work:
 //
-//   • LAN        http://192.168.68.64:5173/                    (at home)
-//   • Tailscale  https://<node>.tail1306c8.ts.net:8443/        (anywhere)
+//   • LAN        http://<lan-ip>:5173/                         (at home)
+//   • Tailscale  https://<node>.<tailnet>.ts.net:8443/        (anywhere)
 //
 // Vite rejects unknown Host headers, so the tailnet name must be allowed or the
 // proxied request returns "Blocked request".
@@ -13,7 +13,8 @@ import { defineConfig } from 'vite'
 // `base`, so under a `--set-path /app` mount the HMR client resolves to the
 // tailnet root — a different proxy target — and hot reload silently dies.
 // Serving at the root of its own port keeps every absolute URL correct.
-const TAILNET_HOST = 'clawer-samurai-1.tail1306c8.ts.net'
+// Your dev machine's tailnet name — set TAILNET_HOST or replace the placeholder.
+const TAILNET_HOST = process.env.TAILNET_HOST ?? '<node>.<tailnet>.ts.net'
 
 export default defineConfig({
   server: {
