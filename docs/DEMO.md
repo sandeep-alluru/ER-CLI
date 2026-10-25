@@ -19,7 +19,13 @@ compilation, start the bridge, check health, configure the reachable bridge
 address, package/install, pair, then Ask. The detailed desktop walkthrough video
 is an owner-controlled local launch asset; it must not be uploaded with releases
 or committed to Git. Its exact filename, duration and observed coverage are
-recorded in the internal `LAUNCH-PACKET.md` after capture.
+recorded in the internal `LAUNCH-PACKET.md`. The completed local file is
+`ER-CLI-desktop-walkthrough.mp4` (2 minutes 30.84 seconds, 1600 × 900).
+It shows real dependency installation, typecheck/build/pack, bridge startup and
+health, saving/testing the desktop bridge address, pairing and a successful real
+Claude Ask. It is silent, with on-screen instructions and chapter markers.
+The video uses desktop HTTP; it does not demonstrate HTTPS setup, portal
+installation or the packaged phone/glasses boundary. It remains local only.
 
 A desktop capture cannot show the packaged phone WebView reaching the bridge,
 SDK persistence across app exits, or an answer reaching a lens. The owner must

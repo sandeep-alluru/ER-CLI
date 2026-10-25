@@ -177,3 +177,88 @@ not an ER-CLI acceptance result. The live Tailscale configuration was not change
   packaged phone WebView, SDK persistence, or lens receipt/paging. The owner must
   record those views with his hardware and explicitly connect the same Ask to
   the bridge's success log. Local video publication is the owner's alone.
+
+## Added deliverable — local desktop walkthrough video
+
+`DEMO-ADDENDUM.md` was read and executed after the brief's repository, draft and
+fresh-clone deliverables. The video is a local owner-controlled asset, excluded
+from Git and release uploads.
+
+- Filename in the repository workdir: **`ER-CLI-desktop-walkthrough.mp4`**.
+- Duration: **150.84 seconds (2 minutes 30.84 seconds)**, measured by `ffprobe`.
+- Format: H.264, 1600 × 900, 25 fps; silent, with visible step explanations and
+  nine embedded chapters. Size: **5,880,579 bytes**.
+- SHA-256: `0dbb5bc2e721d1c58c4843abd9cca6da80d1f3eccc359b5f528e7c54fea3cecf`.
+- Storage: local workdir only. The MP4 and `.launch-capture/` are ignored;
+  neither the video nor raw footage was committed, uploaded or published.
+
+### What the capture actually shows
+
+| Start | Actual recorded coverage |
+| --- | --- |
+| 0:00 | Existing checkout path, `node --version`, `npm --version`, real `npm ci` in this workdir; install exit 0 |
+| 0:13 | Real `npm run typecheck`, `npm run build`, `npm run pack`; observed exit 0 and actual package output |
+| 0:37 | `claude --version` (2.1.220), actual bridge startup with `BRIDGE_HOST=127.0.0.1 BRIDGE_PORT=8787`, live server output and real `curl --fail http://127.0.0.1:8787/health` JSON |
+| 0:48 | Actual Vite startup via `npm run dev -- --host 127.0.0.1 --strictPort`; real app loaded at `http://127.0.0.1:5173` |
+| 0:58 | Actual app Bridge address setting saved as `http://127.0.0.1:8787`, **Save & test** returning **Reachable** |
+| 1:13 | Fresh bridge code entered into a capture-masked field; actual **Pair this phone** action, real `/pair` and bridge `[pair]` log, transition to Ask form |
+| 1:26 | Real read-only project-details prompt sent with **Ask**, actual **Thinking…** state and bridge `[ask ]` log; no mocked endpoint or response |
+| 1:47 | Actual CLI response displayed by the app; bridge `[ok ] 750 chars in 13259ms`, phone reports 13.3s; response correctly identifies `er-cli`, G2 Claude, version 0.1.3 and the npm scripts |
+| 2:11 | Explicit statement of the owner's missing hardware capture; capture credential revoked after the demonstration |
+
+Capture method: Playwright records Chromium frames of a local walkthrough shell.
+Its terminal viewer streams stdout/stderr from actual child processes in this
+workdir; its app pane embeds the actual Vite-served app. Automation performs the
+real form actions. The wrapper adds step explanations and exit-status reporting,
+not replacement application screens. No SDK mocks, HTTP interception, fabricated
+Claude output or simulated pairing were used. FFmpeg transcodes the continuous
+recording to MP4 and adds chapter metadata; the visible command output and app
+frames are unchanged. Local capture script and raw footage remain under ignored
+`.launch-capture/` for owner inspection.
+
+The bridge's fresh code was redacted before displaying stdout and the input was
+masked only for capture. Neither code nor token appears in the deliverable.
+Afterward `revokeDevice` removed the capture device; a follow-up `listDevices`
+check found zero remaining capture-device records. Temporary Vite and bridge
+processes were stopped; `ss` showed neither port listening. No proxy routes or
+Claude account configuration were changed.
+
+The desktop SDK reports `Flutter handler not available` because there is no Even
+Hub host. Those real warnings are visible, not hidden. No uncaught browser page
+errors occurred. The app's text “now on your glasses” is explicitly qualified in
+the video: it is UI text, not verified lens receipt. The full returned response
+was inspected locally; the video shows it in the app's existing scrollable view.
+
+### Precise boundary and owner completion
+
+This video begins with an existing authenticated source checkout and installed
+Node/Claude prerequisites. It shows dependency installation through successful
+**desktop browser → actual Node bridge → actual Claude CLI → browser** Ask.
+It does **not** show cloning/authenticating Git, installing or signing into Claude,
+configuring/testing a real HTTPS front door, uploading/installing through the
+portal, a packaged phone WebView, SDK persistence, or a physical lens. The README
+covers those prerequisites and the HTTPS/package install instructions; no claim
+is made that those omitted actions occurred in the video.
+
+The exact missing capture is the packaged phone-to-glasses boundary: the owner
+must film installing/opening the evaluated package on the paired phone, saving
+and testing the actual HTTPS URL, pairing if needed, submitting Ask with the
+bridge console visible, then the corresponding answer on the lenses. Record
+scrolling a multi-page answer, double-tap exit, and relaunch if demonstrating
+persistence. Keep pairing codes, tokens and private prompts out of the recording.
+The owner alone decides when and where to publish the local desktop video and
+any added hardware footage. The on-glasses Ask acceptance test remains open.
+
+### Final verification additions
+
+- Downloaded both draft package assets and `SHA256SUMS` again into
+  `/tmp/er-cli-release-verified`; `sha256sum -c SHA256SUMS` reported **OK** for
+  both. GitHub still reported `isDraft: true` and repository `PRIVATE`.
+- The capture reran install/typecheck/build/pack successfully in this workdir;
+  its package still hashes to the evaluated fresh-clone package above.
+- `ffprobe` verified video duration, dimensions and nine chapters; full FFmpeg
+  decode to a null sink completed without errors. Bridge and pairing/answer
+  frames were visually reviewed for readability and credential masking.
+- Current docs' relative file links and `git diff --check` passed. Runtime,
+  manifest, dependency and build-config inputs remain identical to evaluated
+  source commit `8dcdb15`; only packet/demo documentation follows that checkpoint.
