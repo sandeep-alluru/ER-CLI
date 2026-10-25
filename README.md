@@ -70,9 +70,9 @@ and tap **Ask**.
 
 ## Watch
 
-[![Desktop walkthrough](assets/hero-poster.png)](assets/desktop-demo.mp4)
+https://github.com/user-attachments/assets/164ba917-96a2-45e6-a204-e67687072a1e
 
-[Watch the desktop walkthrough](assets/desktop-demo.mp4) · [Short teaser](assets/teaser.mp4)
+[Watch the desktop walkthrough](https://github.com/user-attachments/assets/164ba917-96a2-45e6-a204-e67687072a1e) · [Short teaser](assets/teaser.mp4)
 
 The desktop demonstration shows bridge address testing, pairing and a Claude
 response. The full walkthrough covers installation, packaging and bridge setup.
