@@ -1,4 +1,4 @@
-# even-realities — Even Realities G2 glasses app
+# ER-CLI — G2 Claude companion app and bridge
 
 Vite + TypeScript + Even Hub SDK. Scaffolded from the official
 `even-realities/evenhub-templates` **minimal** template on 2026-08-26.
@@ -13,7 +13,7 @@ Vite + TypeScript + Even Hub SDK. Scaffolded from the official
 - Pairs to a phone over Bluetooth; the phone runs the Even Hub companion app,
   which is what actually loads your web app.
 
-## Toolchain (all verified working on this box)
+## Toolchain history (original workstation; see package-lock.json for this clone)
 
 | Thing | Version | Where |
 |---|---|---|
@@ -87,9 +87,10 @@ Check `DOUBLE_CLICK_EVENT` before `CLICK_EVENT`.
 
 ## Before shipping
 
-`app.json` still has the template's placeholder `package_id`
-(`com.example.evenhubminimal`) and `name`. Change both to something you own
-before packing or publishing.
+`app.json` identifies `com.aitiuminc.g2claude`, named "G2 Claude", version
+0.1.3. Keep the SDK floor in sync with the installed SDK. The pack script
+passes `--sdk-ver 0.0.14` explicitly. Follow README.md for current setup;
+`docs/NEXT-STEPS.md` is historical evidence, not current machine state.
 
 <!-- BEGIN command-center-identity v1 — managed by ~/AgentHub/2ndbrain/ops/onboard_projects.py; edit that script, not this block -->
 ## This project in the Command Center

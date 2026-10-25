@@ -14,3 +14,8 @@ dist/
 .vite/
 *.ehpk
 *.bak
+
+# Owner-controlled launch video; never upload or commit capture files.
+*.webm
+*.mp4
+.launch-capture/

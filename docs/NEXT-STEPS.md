@@ -1,3 +1,10 @@
+> **Historical archive.** These session notes describe the original workstation.
+> Claims about running services, zero commits, template identifiers, addresses,
+> and pending approvals are snapshots, not current setup instructions. Follow
+> [the README](../README.md) for setup and [development notes](DEVELOPMENT.md)
+> for verification. The later third-party-app success does not close ER-CLI's
+> own packaged Ask round-trip.
+
 # even-realities — resume state & next steps
 
 Checkpointed 2026-08-27 ~04:05 UTC, after session `8325f9dd` hung at 04:03:16Z.

@@ -1,121 +1,156 @@
-# G2 Claude
+# ER-CLI · G2 Claude
 
-Claude Code on Even Realities G2 smart glasses.
+Type a question on your phone. Read Claude Code's answer on your Even Realities
+G2 glasses, scrolling through longer replies with the touchpad.
 
-The G2 is a Bluetooth display + touchpad: no keyboard, and it runs no code of
-its own. So this is two pieces:
+ER-CLI contains the **G2 Claude** Even Hub app and a small Node bridge that runs
+`claude -p` on your computer. The phone sends the prompt; the bridge uses that
+computer's Claude Code login and working directory; the phone renders the answer
+on the 576 × 288 lens display. Each Ask starts a separate CLI invocation.
 
-- **The app** (`src/`, packaged as an `.ehpk` and loaded by the Even Hub phone
-  app) — a phone-side pairing + prompt screen, and a lens display that renders
-  Claude's answers pre-paginated at real glyph widths on the 576×288 canvas
-  (touchpad: scroll turns the page, double-tap exits).
-- **The bridge** (`bridge/`, plain Node, no dependencies) — runs on the machine
-  you want to drive and shells out to that machine's own `claude` CLI
-  (`claude -p`). It uses the machine's existing Claude login; no API key is
-  stored or needed.
+**Status: experimental, v0.1.3.** Historical hardware notes report installation,
+persistent pairing and app screens. The packaged **Ask round-trip on glasses is
+still unverified** and remains the owner's test. The owner later used a separate
+[Claude Remote app](https://github.com/ThatCrispyToast/g2-claude-remote); its success
+is not evidence that this app's Ask flow works on glasses.
 
+```text
+Phone · Even Hub app ── Bluetooth ──> G2 lens display + touchpad
+        │ prompt / answer (HTTPS)
+        ▼
+Computer · Node bridge on 127.0.0.1:8787 ──> claude -p
 ```
-glasses (Bluetooth display) <-- rendered by the Even Hub phone app
-phone (Even Hub WebView) --HTTPS--> bridge (loopback :8787) --> claude -p
-```
 
-## Pairing & security
+[First run](#first-run) · [Development](docs/DEVELOPMENT.md) ·
+[Bridge reference](docs/BRIDGE.md) · [Demo evidence](docs/DEMO.md)
 
-Driving a coding agent remotely is remote code execution, so the bridge refuses
-every `/ask` without a device token:
+![Actual G2 Claude pairing form in a desktop browser](docs/assets/desktop-pairing.png)
 
-- At startup the bridge prints a single-use pairing code (5-minute TTL). Enter
-  it on the phone to pair. Codes are minted only at startup, by design — a
-  "mint a code" endpoint would let anything that can reach the bridge pair
-  itself.
-- The phone receives a random 32-byte device token. The bridge persists only
-  its SHA-256 hash (constant-time compare) in
-  `~/.config/g2-claude/devices.json`, written `0600`.
-- The bridge binds loopback by default. Reach it through a TLS front door
-  (below), not by binding it wide.
+*Desktop pairing screen; [capture provenance and limits](docs/DEMO.md). No lens
+or hardware Ask capture is claimed.*
 
-## Run the bridge
+## First run
+
+### 1. Install the project
+
+You need Git, Node **20.19+ within 20.x, or 22.12+**, npm, and access to this
+repository. The verification environment uses Node 22.22.2 and npm 10.9.7 on
+Linux. The CLI and optional desktop simulator are local dependencies; global
+Even Hub tooling is unnecessary.
 
 ```bash
-npm run bridge        # or: node bridge/server.mjs
+git clone git@github.com:sandeep-alluru/ER-CLI.git
+cd ER-CLI
+npm ci
+npm run typecheck
+npm run build
 ```
 
-Environment: `BRIDGE_PORT` (default `8787`), `BRIDGE_HOST` (default
-`127.0.0.1`), `BRIDGE_TIMEOUT_MS` (default `180000` — how long one Claude
-answer may take).
+For the bridge, install and sign in to [Claude Code](https://code.claude.com/docs/en/setup)
+on the same computer. Confirm `claude --version` works in the shell that will
+start the bridge. The app needs G2 glasses paired to the Even Realities phone app
+and the same account signed into the [Even Hub portal](https://hub.evenrealities.com).
+See the vendor's [setup guide](https://hub.evenrealities.com/docs/get-started/quickstart).
 
-Endpoints: `GET /health` (unauthenticated liveness), `POST /pair`
-`{code, deviceName}` → `{token}`, `POST /ask` `{prompt}` with
-`Authorization: Bearer <token>` → `{ok, text}`, `POST /log` (device-side
-diagnostics, token-gated).
+### 2. Start the bridge
 
-## Make the bridge reachable from the phone
+From the repository root, leave this terminal running:
 
-The packaged app runs in the Even Hub WebView on the phone. It can only call
-**HTTPS** endpoints — a secure page calling plain `http://` fails as mixed
-content — and it does not run on the bridge machine, so it needs a real
-address for the bridge. Development used Tailscale Serve as the front door:
+```bash
+npm run bridge
+```
+
+It prints its loopback address and a **single-use pairing code**, valid for five
+minutes. Restart the bridge to get a new code if one expires or was already used.
+Claude runs with the bridge process's working directory and existing login.
+
+In another terminal, check liveness:
+
+```bash
+curl --fail http://127.0.0.1:8787/health
+# {"ok":true,"service":"g2-claude-bridge"}
+```
+
+A healthy bridge does not prove that Claude is installed or signed in; Ask checks
+that separate boundary. Prompts may cause Claude Code to use tools on this computer.
+
+### 3. Give the phone an HTTPS bridge address
+
+An installed app cannot use `localhost` to reach your computer. Its bridge URL
+must be **HTTPS** to avoid mixed-content blocking in the phone WebView. Keep the
+bridge bound to loopback and put an HTTPS proxy in front of it.
+
+One option is [Tailscale Serve](https://tailscale.com/kb/1242/tailscale-serve):
+with Tailscale configured on both computer and phone, run on the computer:
 
 ```bash
 tailscale serve --bg --set-path /g2 http://127.0.0.1:8787
-# the bridge is then at https://<your-node>.<your-tailnet>.ts.net/g2
 ```
 
-Tell the app where the bridge is, either way:
+Use the actual HTTPS URL printed by Serve, including `/g2`. The phone must be
+connected to the same tailnet. Check existing Serve routes before changing them.
+Another HTTPS proxy is fine if it forwards `/health`, `/pair`, `/ask`, `/log`
+and CORS preflight requests. [Bridge configuration and troubleshooting](docs/BRIDGE.md).
 
-- **Build time:** `VITE_BRIDGE_URL=https://<your-node>.<your-tailnet>.ts.net/g2 npm run build`
-- **On the device:** *Bridge address* on the pairing screen. A saved address
-  wins over the build-time default, and *Save & test* checks reachability.
-
-In the dev server (`npm run dev`, port 5173) the app instead derives the
-bridge as port 8787 on the same host.
-
-## Develop & package the app
+### 4. Package and install G2 Claude
 
 ```bash
-npm install
-npm run dev        # vite dev server on :5173
-npm run simulate   # Even Hub simulator
-npm run pack       # tsc --noEmit && vite build, then evenhub pack -> .ehpk
+npm run pack
+# creates g2-claude-0.1.3.ehpk
 ```
 
-Sideload for development with `npx evenhub qr --url http://<your-lan-ip>:5173`,
-scanned from the Even Hub app (needs Developer Mode). To install a package on
-real glasses, upload the `.ehpk` in the Even Realities developer portal under
-**Private builds** — no review step, but account-bound: it installs only to
-your own glasses. Then on the phone: Even Realities App → Even Hub → Me →
-Apps → Private builds.
+Upload the package in your project's **Private builds** in the Even Hub portal,
+then install it in the phone app: **Even Hub → Me → Apps → Private builds**.
+Use the same account on the portal and phone. See the vendor's
+[Private Testing guide](https://hub.evenrealities.com/docs/test/private-testing).
+The package name is `com.aitiuminc.g2claude`; its display name is **G2 Claude**.
 
-Manifest: `app.json` — package `com.aitiuminc.g2claude`, name "G2 Claude",
-edition 202601, minimum Even app 2.2.9, no permissions requested.
+### 5. Pair and Ask
 
-## Layout
+1. Open **G2 Claude** in Even Hub on the phone.
+2. Expand **Bridge address**, enter your computer's HTTPS bridge URL, and tap
+   **Save & test**. Continue when it reports **Reachable**. The packaged fallback
+   is `http://localhost:8787`; replace it before pairing.
+3. Enter the fresh code from the bridge terminal and tap **Pair this phone**.
+   The phone stores its token and bridge address through the Even Hub SDK.
+4. Type a short question and tap **Ask**. The phone shows **Thinking…**, followed
+   by the answer or an error. Watch the bridge for `[ask ]` and `[ok  ]` or `[err ]`.
+5. The answer is sent to the glasses. Scroll down/up to turn pages; double-tap
+   exits. **This last packaged phone-to-glasses round-trip still needs owner
+   verification.**
 
-| Path | What |
-|---|---|
-| `index.html` | WebView host; CSS locks zoom and kills iOS double-tap zoom / rubber-band scroll |
-| `src/main.ts` | Startup: waits for the Even bridge, loads persisted pairing state, routes glasses events |
-| `src/phone.ts` | Phone UI: pairing form, prompt box, bridge-address setting |
-| `src/glasses.ts` | Lens display — one text container, upgraded in place; long answers pre-paginated |
-| `src/lib/bridge.ts` | Bridge client: pair / ask / health / device event log |
-| `src/lib/store.ts` | Persistence via the SDK's own storage (browser `localStorage` does not survive app exits in this WebView) |
-| `src/lib/text.ts` | Text layout at real glyph widths for the 576×288 canvas |
-| `bridge/server.mjs` | The bridge HTTP server |
-| `bridge/auth.mjs` | Pairing codes + device tokens (modelled on grokrc's daemon auth) |
-| `docs/NEXT-STEPS.md` | The build log: what was tried, what broke on hardware, what was verified |
+The app accepts a build-time `VITE_BRIDGE_URL` as an alternative default; a saved
+phone address takes precedence. Keep bearer tokens and pairing codes private.
+The phone's **Unpair** clears its local token; server-side revocation is separate.
 
-## Status
+## Develop
 
-v0.1.3 (see `app.json`).
+```bash
+npm run dev        # keep running; http://localhost:5173
+npm run simulate   # separate terminal; desktop UI environment required
+```
 
-Verified on real hardware: the packaged app installs, pairing persists across
-app exits, and the glasses draw the app's screens. The bridge answers real
-Claude Code queries from other machines (curl-verified), and answer rendering /
-pagination is verified in the simulator.
+For QR loading on a phone, use `npx evenhub qr --url http://<computer-LAN-IP>:5173`
+and scan inside Even Hub with Developer Mode enabled. Keep phone and computer on
+reachable networks; `localhost` points to the phone itself. On port 5173 the app
+defaults its bridge to port 8787 on the same hostname; use **Bridge address** to
+select your HTTPS proxy since the bridge binds loopback by default.
 
-**Known open item:** the Ask round-trip from the packaged build has not been
-completed on hardware. In the last hardware session (2026-08-29) the bridge log
-showed the pairings but no `[ask]`, and the check that would isolate network
-vs code — *Bridge address → Save & test*, then one Ask with the bridge console
-in view — was not run before work stopped. Full record in `docs/NEXT-STEPS.md`
-("PARKED 2026-08-29").
+A desktop browser can exercise the phone form but cannot prove SDK persistence,
+lens rendering or packaged WebView networking. [Commands and verification](docs/DEVELOPMENT.md).
+
+## Project map
+
+| Path | Role |
+| --- | --- |
+| `src/main.ts` | SDK startup and glasses event routing |
+| `src/phone.ts` | Phone pairing, bridge setting and Ask form |
+| `src/glasses.ts`, `src/lib/text.ts` | Glyph-width wrapping and paginated lens text |
+| `src/lib/bridge.ts`, `src/lib/store.ts` | HTTP client and SDK-backed device state |
+| `bridge/server.mjs`, `bridge/auth.mjs` | Claude CLI bridge and device authentication |
+| `app.json` | Even Hub manifest: v0.1.3, SDK 0.0.14, app 2.2.9 minimum |
+| `docs/NEXT-STEPS.md` | Historical experiments and owner-reported hardware evidence |
+
+When reporting a failure, include the app version, loading method (package, QR
+or desktop), reachability result, and redacted bridge error. Never include codes,
+tokens, private prompts or machine credentials.
