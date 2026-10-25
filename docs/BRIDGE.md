@@ -64,3 +64,23 @@ the public internet.
 A health check proves HTTP reachability only. Successful desktop Ask proves the
 browser → Node → CLI → browser path only. Packaged WebView networking and lens
 behavior require the separate owner test.
+
+## Packaged Ask: hypothesis and settling test
+
+No code bug in `/ask` has been proven. The recorded desktop browser → Node →
+Claude → browser request succeeded, while the historical packaged session showed
+pairing but no `[ask ]` line. The leading hypothesis is the network path between
+Even Hub's WebView and the phone's Tailscale VPN. It remains a hypothesis, not a
+diagnosis or evidence that every other cause is excluded.
+
+The owner must open the installed app on his paired phone, use **Bridge address
+→ Save & test**, and submit a short Ask while watching the actual bridge console.
+Record the reachability result, phone error/status and whether `[ask ]`, `[ok ]`
+or `[err ]` appears, then verify receipt on the lenses. A successful desktop
+request cannot replace this test. Redact addresses and credentials in shared
+records. If transport fails, inspect HTTPS/VPN routing, CORS and the platform's
+network permissions; the vendor documents both whitelist and CORS checks in its
+[connection model](https://hub.evenrealities.com/docs/get-started/architecture).
+The manifest currently requests no permissions; that fact alone does not prove
+the cause of the historical failure. No speculative code or manifest fix was
+made during the product-direction rework.
