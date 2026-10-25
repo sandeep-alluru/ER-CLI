@@ -33,9 +33,8 @@ This is a glasses-first presentation, not a claim of hands-free prompt entry.
 
 “Open bridge” describes source the owner can inspect and adapt in this private
 repo. It does not mean the repo is public, that Claude is an open model, that
-other agents already work, or that this lane settled any deferred distribution
-terms. ER-CLI currently invokes `claude -p` per Ask; it is not a live-session
-monitor, a voice assistant, or a general-purpose cross-glasses platform.
+other agents already work. ER-CLI currently invokes `claude -p` per Ask; it is
+not a live-session monitor, a voice assistant, or a general-purpose cross-glasses platform.
 
 Agent execution and inference are different boundaries. `bridge/server.mjs`
 spawns the local CLI, while Claude's documentation says model requests leave the
@@ -165,13 +164,103 @@ The evaluated launch package's SHA-256 remains
 The existing tag stays at prep commit `496bad4`; the evaluated package explicitly
 identifies `8dcdb15` in its draft notes. No tag was moved.
 
-Delivery starts from published-private checkpoint
+Delivery starts from remote private checkpoint
 `a84993d531358c006f1e8a343bee3272145dde4c`. Rework commits are local only because
 the owner prohibited uploads/publication. Resolve the final local packet commit
 with `git log -1 --format=%H -- LAUNCH-PACKET.md`; a commit cannot embed its own
 hash in its tree. The source/runtime SHA remains `8dcdb15`, with a zero diff for
 `src/`, `bridge/`, `app.json`, `index.html`, `vite.config.ts`, `package.json` and
 `package-lock.json`.
+
+
+## Revised local walkthrough — completed
+
+- **File:** `ER-CLI-desktop-walkthrough.mp4`, in this workdir only.
+- **Duration:** **259.88 seconds (4 minutes 19.88 seconds)**, measured with
+  `ffprobe`; 1600 × 900, H.264, 25 fps, silent with on-screen explanations.
+- **Size:** 9,799,773 bytes. **Chapters:** 13.
+- **SHA-256:** `dd046059c12f5bcc4fc8586d9e95c2f628bbc8f66f167ad96e6617b4aaab10bd`.
+- **Publication:** not committed, pushed, uploaded or published. `.gitignore`
+  excludes the MP4 and `.launch-capture/`. The original 2:30.84 recording is
+  retained locally as `.launch-capture/original-desktop-walkthrough.mp4` and its
+  original evidence remains in the internal archive, not as the current demo.
+
+| Start | Actual coverage |
+| --- | --- |
+| 0:00 | ER-CLI — Your Claude agent on Even G2 |
+| 0:25 | Compare the choices / Same G2 and programmable HUDs |
+| 0:55 | Compare the choices / Open platforms and mass-market companions |
+| 1:25 | Your agent, your bridge / PROPOSED approach name |
+| 1:51 | 1 / Install the G2 app and bridge source |
+| 2:03 | 2 / Check types, build and package |
+| 2:27 | 3 / Connect your own Claude setup |
+| 2:38 | 4 / Start the real app in a desktop browser |
+| 2:48 | 5 / Save and test the bridge address |
+| 3:03 | 6 / Pair this browser to the actual bridge |
+| 3:17 | 7 / Ask Claude through the actual bridge |
+| 3:36 | 8 / Read the real response and bridge success log |
+| 4:00 | 9 / Owner test: packaged WebView → bridge → glasses |
+
+The first four chapters read actual product documentation: title/headline,
+audience, comparison with the real competitor set, differentiator and cloud
+boundaries. They do not simulate competitor screens or glasses. The subsequent
+live walkthrough uses the same actual Vite app, Node bridge and Claude CLI in
+this workdir as before. All shown install/typecheck/build/pack commands exited 0.
+The new real Ask returned **503 characters**; the bridge logged
+`[ok ] 503 chars in 12047ms` and the app displayed **Answered in 12.1s**.
+The response correctly separated HUD, phone WebView, local agent process and
+remote model provider, and retained the unverified on-glasses boundary.
+
+Capture method: Playwright records Chromium showing the local README/comparison
+and then a live stdout/stderr command viewer beside the actual Vite-served app.
+The wrapper adds explanatory headings and observed exit codes. Automation enters
+the actual fields and invokes actual endpoints; no request interception, SDK
+mocks, replacement app markup or fabricated CLI response is used. FFmpeg encodes
+the continuous recording and adds chapter metadata. The only capture privacy
+changes mask the freshly issued code in stdout and its input field. No code or
+token is included in the video. The capture device was revoked with a checked
+successful result; a follow-up device-list query found zero remaining capture
+device records. Vite/bridge were stopped, with no listeners on 5173/8787.
+The capture script, raw footage and metadata remain under `.launch-capture/`.
+
+Expected desktop `Flutter handler not available` warnings are visible; there
+were no uncaught page errors. The actual app's “now on your glasses” wording is
+qualified onscreen because no glasses were attached. The live answer and both
+comparison pages were visually reviewed for legibility and masking. The current
+source table adds a direct versioned npm reference for Even Terminal after the
+recording's document snapshot; its product facts and price columns are unchanged.
+
+### Exact capture gap
+
+The video starts from an existing checkout with Node and an authenticated Claude
+CLI. It does not record Git clone/authentication, installing/logging into Claude,
+a real HTTPS proxy or VPN configuration, portal upload/install, a packaged phone
+WebView, SDK persistence or physical HUD operation. It records the complete
+**desktop browser → real bridge → real Claude → browser** path only.
+
+The owner needs footage of the installed evaluated package on his paired phone,
+its actual HTTPS **Save & test**, a short Ask with bridge console visible, and the
+corresponding answer on the glasses. Add multi-page scrolling and double-tap
+exit; add relaunch if claiming persistence. Keep credentials and tailnet-specific
+addresses out of anything shared. The test and footage remain owner-only and
+outstanding, and the network-path hypothesis remains unproven.
+
+## Rework acceptance
+
+The revised README, comparison reference, packet and walkthrough agree on the
+product identity, the proposed approach name, the source/evidence labels, the
+limits of self-hosting, and the outstanding owner test. The table rows are
+identical across all three Markdown documents. Rendered reference links and
+relative file links were checked. `git diff --check` passed. Typecheck/build
+passed before capture, and capture reran installation/typecheck/build/pack with
+the same 73,849-byte package checksum as the evaluated draft build.
+
+The final local video was inspected with `ffprobe`, and decoded fully through
+FFmpeg without errors. Identity, both comparison views, differentiator,
+credential-masked pairing and actual answer frames were checked. No remote
+write occurred in this rework: the prior private remote checkpoint and draft
+assets remain intact. Only local documentation commits and the local video
+changed; no new hardware claim or speculative network fix was made.
 
 
 [E1]: https://www.evenrealities.com/ai-glasses
