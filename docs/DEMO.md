@@ -29,8 +29,8 @@ A desktop browser can use the same pairing and Ask form while Vite is running:
 npm run dev
 ```
 
-Open `http://localhost:5173` after starting the bridge. The SDK's desktop
-`Flutter handler not available` messages mean the browser is outside Even Hub.
-Desktop pairing and Ask do not establish physical lens receipt, SDK persistence
-or installed WebView networking. The installed phone-to-glasses Ask path remains
-unverified. [Connection troubleshooting](BRIDGE.md#connection-troubleshooting).
+Open `http://localhost:5173` after starting the bridge. In desktop mode the app
+uses browser storage. Even Hub uses SDK-backed storage on the phone.
+
+The [desktop demo](../assets/desktop-demo.mp4) shows address testing, pairing and
+a Claude response. [News](../README.md#news) lists the next installed G2 checks.

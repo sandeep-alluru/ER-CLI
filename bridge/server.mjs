@@ -1,6 +1,6 @@
 // Claude Code remote control — the machine-side half.
 //
-// The glasses cannot run Claude Code; they are a display driven by the phone.
+// The phone drives the glasses display; the computer runs Claude Code.
 // So Claude Code runs HERE and this server is the doorway to it.
 //
 //   GET  /health                      -> liveness, unauthenticated
@@ -8,10 +8,10 @@
 //   POST /ask    {prompt}             -> {ok, text}   Authorization: Bearer <token>
 //
 // Put an HTTPS proxy in front of the loopback listener for phone access.
-// /ask requires a device token because prompts can invoke local agent tools.
+// /ask requires a device token because prompts can invoke local Claude tools.
 //
 // Auth to Anthropic: none of its own. It shells out to the `claude` CLI, which
-// uses the login already on this machine. No API key is stored or needed.
+// uses the login already on this machine. Credentials come from that installation.
 
 import { createServer } from 'node:http'
 import { execFile } from 'node:child_process'
@@ -84,7 +84,7 @@ const server = createServer(async (req, res) => {
     return send(res, 200, { ok: true, token })
   }
 
-  // Device-side diagnostics. The glasses have no console we can read from here,
+  // Device-side diagnostics. The bridge collects device-side console messages,
   // so the app reports its own lifecycle and this prints it next to the asks.
   if (req.method === 'POST' && req.url === '/log') {
     const device = await verifyToken(bearer(req))

@@ -36,18 +36,18 @@ Claude runs with the bridge process's working directory and existing login.
 In another terminal, check liveness:
 
 ```bash
-curl --fail http://127.0.0.1:8787/health
+curl --silent --show-error http://127.0.0.1:8787/health
 # {"ok":true,"service":"g2-claude-bridge"}
 ```
 
-A healthy bridge does not prove that Claude is installed or signed in; Ask checks
-that separate boundary. Prompts may cause Claude Code to use tools on this computer.
+The health response confirms HTTP reachability. Ask exercises Claude Code and
+its existing login. Prompts can use Claude Code tools on this computer.
 
 ## 3. Give the phone an HTTPS bridge address
 
-An installed app cannot use `localhost` to reach your computer. Its bridge URL
-must be **HTTPS** to avoid mixed-content blocking in the phone WebView. Keep the
-bridge bound to loopback and put an HTTPS proxy in front of it.
+Give the installed app an **HTTPS** bridge URL reachable from the phone. Keep
+the bridge bound to loopback and put an HTTPS proxy in front of it. On the phone,
+`localhost` addresses the phone itself.
 
 One option is [Tailscale Serve](https://tailscale.com/kb/1242/tailscale-serve):
 with Tailscale configured on both computer and phone, run on the computer:
@@ -85,7 +85,7 @@ The package name is `com.aitiuminc.g2claude`; its display name is **G2 Claude**.
 4. Type a short question and tap **Ask**. The phone shows **Thinking…**, followed
    by the answer or an error. Watch the bridge for `[ask ]` and `[ok  ]` or `[err ]`.
 5. The answer is sent to the glasses. Scroll down/up to turn pages; double-tap
-   exits. **The installed phone-to-glasses Ask path remains unverified.**
+   exits. Upcoming hardware checks cover this installed path; see [News](../README.md#news).
 
 The app accepts a build-time `VITE_BRIDGE_URL` as an alternative default; a saved
 phone address takes precedence. Keep bearer tokens and pairing codes private.

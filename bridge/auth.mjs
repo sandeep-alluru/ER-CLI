@@ -1,12 +1,12 @@
 /**
  * Pairing and device tokens for the G2 Claude bridge.
  *
- * Remote prompts can invoke local agent tools, so every Ask must authenticate
+ * Remote prompts can invoke local Claude tools, so every Ask must authenticate
  * a paired device before executing the CLI.
  *
  *  - Pairing codes are single-use and expire in minutes.
  *  - Only a SHA-256 hash of each device token is persisted, so a leaked config
- *    file does not yield a working credential.
+ *    file contains hashes rather than credentials.
  *  - Token comparison is constant-time.
  *  - The store is written 0600.
  */
@@ -19,7 +19,7 @@ export const CONFIG_DIR = join(homedir(), '.config', 'g2-claude')
 const STORE_PATH = join(CONFIG_DIR, 'devices.json')
 
 const PAIRING_TTL_MS = 5 * 60_000
-/** Unambiguous alphabet — no 0/O, 1/I/L — because these get typed on a phone. */
+/** Unambiguous alphabet — excludes 0/O and 1/I/L — because these get typed on a phone. */
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
 const CODE_LENGTH = 6
 /** Outstanding codes allowed at once — enough for a retry, bounded against abuse. */
@@ -62,7 +62,7 @@ export function createPairingCode() {
 export async function redeemPairingCode(code, deviceName) {
   const entry = pending.get(code)
   if (!entry) return null
-  pending.delete(code) // single use, even on a later failure
+  pending.delete(code) // single use, also on an error
   if (entry.expiresAt < Date.now()) return null
 
   const token = randomBytes(32).toString('base64url')
@@ -88,7 +88,7 @@ export async function verifyToken(token) {
   for (const d of store.devices) {
     const known = Buffer.from(d.tokenHash, 'utf8')
     if (known.length !== candidate.length) continue
-    // Compare every device — no early exit, so timing does not leak position.
+    // Compare every device — no early exit, so timing is independent of position.
     if (timingSafeEqual(known, candidate)) matched = d
   }
   if (!matched) return null

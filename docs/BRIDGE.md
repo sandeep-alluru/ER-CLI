@@ -2,8 +2,7 @@
 
 The bridge runs on your computer and invokes
 `claude -p <prompt> --output-format text`. It uses the process's working directory,
-PATH and existing Claude login. Each Ask returns one complete answer; there is
-no streaming or shared chat session. [Installation](SETUP.md).
+PATH and existing Claude login. Each Ask starts a separate CLI invocation and returns a complete answer. [Installation](SETUP.md).
 
 ## Settings
 
@@ -46,34 +45,28 @@ Replace `DEVICE_ID` with an ID from that list:
 node --input-type=module -e "import {revokeDevice} from './bridge/auth.mjs'; console.log(await revokeDevice('DEVICE_ID'))"
 ```
 
-The device's next Ask fails authentication and returns to pairing. Restart the
-bridge for a new code to pair again. There is no HTTP code-minting endpoint.
-Keep the bridge on a private network behind HTTPS; anyone with a valid device
-token can send prompts to your Claude installation.
+The device returns to pairing on its next Ask. Restart the bridge to generate
+a fresh pairing code.
+Device tokens authorize prompts to your Claude installation. Use a private
+network and HTTPS for phone access.
 
-## Connection troubleshooting
+## Connection checks
 
-| Symptom | Action |
+| Check | Action |
 | --- | --- |
-| Bridge cannot listen | Check whether port 8787 is occupied; match `BRIDGE_PORT` to the proxy target. |
-| Local `/health` fails | Start the bridge and inspect the terminal. Claude login is not needed for this endpoint. |
-| Phone reports `No answer` / `Load failed` | Test the HTTPS URL from the phone. Check VPN routing, proxy path, TLS and mixed content. Phone-local `localhost` cannot reach your computer. |
-| Pairing rejects a code | Use the current code within five minutes. Restart after redemption or expiry. |
-| Ask has no `[ask ]` line | Check **Bridge address → Save & test**, pairing and the phone error. Authentication errors occur before the Ask log. |
-| Ask logs `[err ]` / HTTP 502 | Check the Claude executable, login and timeout in the bridge's environment. |
-| Phone has an answer but lenses do not | Check the SDK/display connection on the physical glasses. |
+| Bridge port | Start the bridge and match `BRIDGE_PORT` to the HTTPS proxy target. |
+| Local health | Request `/health` and confirm the service JSON. |
+| Phone route | Open the HTTPS bridge URL on the phone; check VPN routing, proxy path and TLS. `localhost` addresses the phone itself. |
+| Pairing code | Enter the current code within five minutes. Restart the bridge after redemption or expiry. |
+| Request arrival | Use **Bridge address → Save & test**, pair, and send a question. Watch for `[ask ]`. |
+| Claude response | Follow `[ask ]` with `[ok ]` and the phone answer. For `[err ]`, check the executable, login and timeout. |
+| G2 display | Read the answer on the lenses, scroll through a longer answer and double-tap to exit. |
 
-A health response proves HTTP reachability, not Claude availability. A successful
-desktop Ask does not establish installed WebView networking or lens receipt.
-The installed phone-to-glasses Ask path remains unverified.
-
-For an installed-app check, open **G2 Claude**, use **Save & test**, and submit a
-short question with the bridge console visible. Correlate the phone result with
-`[ask ]`, `[ok ]` or `[err ]`, then check the answer on the lenses. Test scrolling
-a longer answer and double-tap exit separately.
+Health confirms HTTP reachability. Ask exercises the installed Claude CLI.
+For an installed-app check, open **G2 Claude** and correlate the phone result
+with `[ask ]`, `[ok ]` or `[err ]` in the bridge console.
 
 WebView traffic can follow a different path from a phone browser when a VPN is
-active. Also check CORS and Even Hub's network permissions, described in the
+active. Check CORS and Even Hub's network permissions in the
 [vendor connection model](https://hub.evenrealities.com/docs/get-started/architecture).
-No `/ask` code defect has been established; VPN routing is a possible cause of
-installed-app connection failures, not a confirmed diagnosis.
+Upcoming installed-app and lens checks are listed in [News](../README.md#news).

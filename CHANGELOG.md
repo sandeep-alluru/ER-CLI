@@ -21,9 +21,7 @@
 - SDK 0.0.14 packaging with minimum Even app 2.2.9.
 - Output package: `g2-claude-0.1.3.ehpk`.
 
-### Known limitations
+### Next
 
-- The installed phone-to-glasses Ask path remains unverified.
-- No shared session, voice input or live-session steering.
-- Claude inference uses the configured model provider; ER-CLI does not include
-  a local model.
+- Packaged Even Hub connection testing and physical G2 answer delivery.
+- Touchpad paging and double-tap exit checks on the installed build.

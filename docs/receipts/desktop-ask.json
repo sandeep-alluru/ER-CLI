@@ -2,18 +2,18 @@
   "date": "2026-10-25",
   "result": "success",
   "scope": "Chromium app to loopback HTTP bridge to installed Claude Code",
-  "hardware_tested": false,
+  "environment": "desktop browser",
   "samples": 1,
-  "prompt": "Read README.md and bridge/server.mjs. Answer in under 65 words, plain text, addressing the reader as you. Explain what ER-CLI does, where Claude runs, and the unverified G2 limitation. Use only second person and plain product language. Do not edit files or run shell commands.",
-  "response": "ER-CLI puts your Claude Code agent on Even G2 glasses. You type a question on your paired phone, and the app sends it to a small Node bridge on your own computer. Claude runs there \u2014 the bridge shells out to your installed `claude` CLI using your existing login, so no API key and no hosted relay. The answer comes back paginated for the G2 display. Unverified: the installed phone-to-glasses Ask path on real hardware.",
-  "characters": 419,
-  "elapsed_ms": 12625,
-  "bridge_elapsed_ms": 12110,
+  "prompt": "In exactly two short sentences, explain why the Moon has phases. Start with the words The Moon. Return only plain text.",
+  "response": "The Moon has phases because sunlight always lights one half of it, and from Earth we see a changing fraction of that lit half as the Moon orbits us. The phase we see depends on the angle between the Sun, Earth, and Moon, which cycles roughly every 29.5 days.",
+  "characters": 258,
+  "elapsed_ms": 9556,
+  "bridge_elapsed_ms": 9104,
   "claude_version": "2.1.220 (Claude Code)",
   "pairing": "real single-use code; demonstration device revoked afterward",
   "video": "assets/desktop-demo.mp4",
   "source_sha256": {
-    "bridge/server.mjs": "cb47eb68a3979b00cd0b34f310cd53110b5c5b0b7482c5aeea20ff10fcfc9fd9",
-    "src/phone.ts": "a8a45f3dcf066aac6a15a532238356799ddb66f0bc98330714e877d372bc10f4"
+    "bridge/server.mjs": "b7a8dcb9caedb8dd399ceddb18a2c9da00193f367c0960468accc915a335450e",
+    "src/phone.ts": "cc6556a2dfb5d528e65c3dcd39f8c45adff6b6e8cad9e9e7ee2d0bdbab3198f2"
   }
 }

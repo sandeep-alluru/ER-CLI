@@ -16,7 +16,7 @@ const CONTAINER_NAME = 'main'
  * One text container, redrawn via `textContainerUpgrade` — it updates in place
  * with no flicker, unlike rebuilding the page on every change. Long answers are
  * pre-paginated at real glyph widths and turned with the touchpad, because the
- * canvas holds ten lines and Claude does not answer in ten lines.
+ * canvas uses a fixed number of lines per page.
  */
 export class GlassesDisplay {
   #bridge: Bridge
@@ -62,7 +62,7 @@ export class GlassesDisplay {
     const body = this.#pages[this.#page] ?? ['']
     const pager = this.#pages.length > 1 ? `  [${this.#page + 1}/${this.#pages.length}]` : ''
     // Pad to a fixed height so the footer sits on the same line every frame and
-    // the text does not jump as pages of different length go by.
+    // the text stays aligned across pages of different lengths.
     const padded = [...body, ...Array(Math.max(0, BODY_LINES - body.length)).fill('')]
     return [...padded, `${this.#footer}${pager}`].join('\n')
   }

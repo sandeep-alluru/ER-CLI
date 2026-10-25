@@ -15,7 +15,7 @@ assert.equal(ask.result, 'success')
 assert.equal(ask.response.length, ask.characters)
 assert.ok(ask.elapsed_ms > 0 && Number.isFinite(ask.elapsed_ms))
 assert.ok(ask.bridge_elapsed_ms > 0 && Number.isFinite(ask.bridge_elapsed_ms))
-assert.equal(ask.hardware_tested, false)
+assert.equal(ask.environment, 'desktop browser')
 let count = 0
 for (const line of readFileSync('assets/SHA256SUMS', 'utf8').trim().split('\n')) {
   const match = line.match(/^([a-f0-9]{64})  (assets\/[\w.\/-]+)$/)

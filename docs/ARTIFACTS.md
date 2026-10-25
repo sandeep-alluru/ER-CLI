@@ -1,14 +1,14 @@
 # Build artifacts
 
-ER-CLI contains no model weights. The bridge invokes your installed Claude Code;
-your CLI configuration determines the model and provider.
+The ER-CLI distributable contains the G2 app. The Node bridge invokes your
+installed Claude Code; your CLI configuration determines the model and provider.
 
 | Artifact | Source | Identity | Changes |
 | --- | --- | --- | --- |
 | G2 Claude `.ehpk` | App sources in this repository | [Size and SHA-256](receipts/build.json) | Vite compilation and Even Hub packaging |
 | Even Hub SDK | `@evenrealities/even_hub_sdk` | Version and npm integrity in [lockfile](../package-lock.json) | Used as an npm dependency |
 | Pretext | `@evenrealities/pretext` | Version and npm integrity in [lockfile](../package-lock.json) | Glyph measurement dependency |
-| Claude model | Your configured Claude provider | No weights distributed | CLI request only |
+| Claude model | Your configured Claude provider | Provider-managed | CLI request only |
 
 ```bash
 npm ci

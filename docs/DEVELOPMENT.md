@@ -5,17 +5,17 @@ locked by `package-lock.json`; use `npm ci` for a clean installation.
 
 | Command | Result |
 | --- | --- |
-| `npm run typecheck` | TypeScript check without emitting files |
+| `npm run typecheck` | TypeScript validation |
 | `npm run build` | TypeScript check, then Vite production output in `dist/` |
 | `npm run pack` | Build and package `g2-claude-0.1.3.ehpk`, explicitly using SDK 0.0.14 |
 | `npm run dev` | Vite on port 5173, reachable on network interfaces |
-| `npm run preview` | Preview the built web assets; not an Even Hub hardware test |
+| `npm run preview` | Serve the compiled web app locally |
 | `npm run simulate` | Open the app in the desktop Even Hub simulator |
 | `npm run bridge` | Run the Node bridge in the current working directory |
 
-No repository test suite is configured. Build/typecheck and package checks prove
-compilation and packaging, not an authenticated Claude response or hardware Ask.
-`npm audit` reports dependency advisories; record its result separately.
+Build/typecheck checks compilation; packaging produces the installable app.
+`npm run check:evidence` validates source, package and media fingerprints.
+`npm audit` checks the dependency tree for published advisories.
 
 ## Simulator
 
@@ -36,8 +36,8 @@ curl -X POST http://127.0.0.1:9898/api/input \
   -H 'Content-Type: application/json' -d '{"action":"down"}'
 ```
 
-Inputs are `up`, `down`, `click`, `double_click`; no pointer or glasses keyboard.
-Do not infer real hardware behavior from simulator success.
+Inputs are `up`, `down`, `click`, `double_click`, matching touchpad gestures.
+Installed hardware checks are listed in [News](../README.md#news).
 
 ## Packaging details
 
@@ -55,7 +55,7 @@ VITE_BRIDGE_URL=https://your-bridge.example/g2 npm run pack
 
 This URL is public build configuration, never a place for credentials. A saved
 phone URL overrides it. `TAILNET_HOST` can allow a specific proxy hostname when
-running Vite through a tailnet HTTPS proxy; it does not configure a proxy itself.
+running Vite through a tailnet HTTPS proxy. Configure that proxy separately.
 
 ## Clean build
 
@@ -67,9 +67,9 @@ npm run pack
 npm audit
 ```
 
-`npm run pack` creates `g2-claude-0.1.3.ehpk`. It does not install the app on a
-phone or test an authenticated Claude request. Use the [setup guide](SETUP.md)
-to connect the app and the [bridge guide](BRIDGE.md) to diagnose requests.
+`npm run pack` creates `g2-claude-0.1.3.ehpk`. Continue with the [setup guide](SETUP.md)
+for phone installation and authenticated Ask, and the [bridge guide](BRIDGE.md)
+for connection checks.
 
 [SDK package metadata](https://www.npmjs.com/package/@evenrealities/even_hub_sdk/v/0.0.14) ·
 [Simulator](https://www.npmjs.com/package/@evenrealities/evenhub-simulator) ·

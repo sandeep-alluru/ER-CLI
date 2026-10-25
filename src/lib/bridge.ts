@@ -1,9 +1,9 @@
 // Client for the Claude Code bridge running on the dev machine.
 //
-// The glasses cannot run Claude Code — they are a display driven by the phone.
+// The phone drives the glasses display; the computer runs Claude Code.
 // This talks to bridge/server.mjs, which shells out to the `claude` CLI.
 //
-// Pairing is required because driving a coding agent remotely is remote code
+// Pairing is required because driving a Claude Code remotely is remote code
 // execution; the bridge refuses every /ask without a device token.
 
 import { storeGet, storeSet, storeDel } from './store'
@@ -20,7 +20,7 @@ const URL_KEY = 'g2claude.bridgeUrl'
  *
  *   VITE_BRIDGE_URL=https://<your-node>.<your-tailnet>.ts.net/g2 npm run build
  *
- * It must be HTTPS: a secure page cannot call a plain http:// endpoint, so a
+ * It must be HTTPS: secure WebViews use HTTPS for bridge requests; a
  * LAN address fails as mixed content even at home. The address can also be
  * set on the device (Bridge address, on the pairing screen) — a saved
  * address wins over this default.
@@ -78,7 +78,7 @@ async function post(path: string, body: unknown, auth = false): Promise<any> {
     body: JSON.stringify(body),
   })
   // The bridge answers JSON on every path, including its error paths, so a
-  // parse failure means something else replied — a proxy, or the wrong port.
+  // parse error means something else replied — a proxy, or the wrong port.
   let json: any
   try {
     json = await res.json()
@@ -116,7 +116,7 @@ export async function ask(prompt: string): Promise<string> {
     return text
   } catch (e) {
     // A revoked or stale token should drop us back to the pairing screen rather
-    // than looping on an error the user cannot act on.
+    // than repeating requests with a stale credential.
     if (e instanceof Error && /unauthorized/i.test(e.message)) await unpair()
     throw e
   }
@@ -125,8 +125,8 @@ export async function ask(prompt: string): Promise<string> {
 /**
  * Report a device-side event to the bridge console.
  *
- * The glasses have no console reachable from the dev machine, so lifecycle and
- * failures are shipped here instead. Never throws — diagnostics must not be
+ * The bridge collects lifecycle and
+ * diagnostic messages from the phone. Never throws — diagnostics must not be
  * able to break the thing they are diagnosing.
  */
 export function report(msg: string): void {

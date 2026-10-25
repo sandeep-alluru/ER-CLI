@@ -13,22 +13,22 @@
   },
   "artifact": {
     "path": "g2-claude-0.1.3.ehpk",
-    "bytes": 73849,
-    "sha256": "679d9d1274ec8c546085af2b1455ee11e43f424d5f717e530423f38d7c2c1707"
+    "bytes": 73833,
+    "sha256": "ba425c1daf87505846f900e5f95f3104a6a32467a1943756316f9fb53df52a92"
   },
   "source_sha256": {
     "app.json": "e44f85cb3c4f7237ce4f0fb493d5207fae2b73fccbd918d2bb8d225c496135fa",
-    "bridge/auth.mjs": "bf3eb03ca3a12064d7e365870778a80b9ec4b7ff51b040e99bb2a4e859d412d9",
-    "bridge/server.mjs": "cb47eb68a3979b00cd0b34f310cd53110b5c5b0b7482c5aeea20ff10fcfc9fd9",
+    "bridge/auth.mjs": "ab43ada3ad9ebbd0bebfdaf39c14de050c6b669da4b0a00ed4fa1cc283e4c0bd",
+    "bridge/server.mjs": "b7a8dcb9caedb8dd399ceddb18a2c9da00193f367c0960468accc915a335450e",
     "index.html": "525ffec81242c628db492a01464577860e370f6baccbb2e2ec9fd11acf21de76",
     "package-lock.json": "03575875feb984a122c9b97976d6cb25010571f0a10582060b9197ddcb45f97d",
     "package.json": "758130eaaa7cb793c499f4877dc53c3cfe0571d0cdae81aa231fe440dfdae474",
-    "src/glasses.ts": "34010e5aa9e4c35a2a6e2767e665bd58e9712596b3ecbaf049c0b8488e12f304",
-    "src/lib/bridge.ts": "d06fe5b38dc4ac32a894d1cafdc3e9d9f1553c89e32caa9e1f66fcfff1d699b0",
+    "src/glasses.ts": "c90a34c4c059d01e255b15626d35bfb4168bee582ab573a07b2ae6c1055aec01",
+    "src/lib/bridge.ts": "994aed6bcfe60eafa3fd39b3c798d64a2ba78db2a4ca1e0c854fd06d9663d121",
     "src/lib/store.ts": "4bbfd19e771d15754cb0013f2fd7f9504f9e97e40390b1c9d385026f1e50196d",
     "src/lib/text.ts": "8763e78d44c8f9835b3081e11686ae75be1a2d7b342a08e193e7377ccac79048",
     "src/main.ts": "dfd8971067348933973be9949de19ae91b952f8b32b50e1b03fe2ac480f55e66",
-    "src/phone.ts": "a8a45f3dcf066aac6a15a532238356799ddb66f0bc98330714e877d372bc10f4",
+    "src/phone.ts": "cc6556a2dfb5d528e65c3dcd39f8c45adff6b6e8cad9e9e7ee2d0bdbab3198f2",
     "src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
     "tsconfig.json": "96d6ac2cdd5e0dfb7b27080b606c6ce1e5d900f8f8baed4f10e30387ec8f03be",
     "vite.config.ts": "72c661bba2d7f465d61c4eaa45c60418a09b23dc3e69695f9e2eeea83c8bc982"

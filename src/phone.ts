@@ -127,7 +127,7 @@ export function mountPhoneUI(root: HTMLElement, cb: PhoneCallbacks): void {
       try {
         const text = await ask(prompt)
         const secs = ((Date.now() - started) / 1000).toFixed(1)
-        status.textContent = `Answered in ${secs}s — now on your glasses`
+        status.textContent = `Answered in ${secs}s`
         answer.textContent = text
         cb.onAnswer(text)
       } catch (e) {
