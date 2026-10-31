@@ -15,7 +15,7 @@ import { mkdir, readFile, writeFile, chmod } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
-export const CONFIG_DIR = join(homedir(), '.config', 'g2-claude')
+export const CONFIG_DIR = process.env.G2_CLAUDE_CONFIG_DIR ?? join(homedir(), '.config', 'g2-claude')
 const STORE_PATH = join(CONFIG_DIR, 'devices.json')
 
 const PAIRING_TTL_MS = 5 * 60_000

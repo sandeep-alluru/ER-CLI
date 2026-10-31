@@ -12,6 +12,8 @@
 | 9.556 seconds | One desktop request, click to answer | [Method](docs/BENCHMARKS.md) |
 | 73,833-byte app package | SDK 0.0.14, minimum Even app 2.2.9 | [Build receipt](docs/receipts/build.json) |
 
+Results above describe the [v0.1.3 release](https://github.com/sandeep-alluru/ER-CLI/tree/v0.1.3).
+
 ![One desktop request](assets/desktop-request.svg)
 
 ## What ER-CLI does
@@ -27,6 +29,8 @@ Model requests use your configured Claude provider.
 
 ## News
 
+- **2026-10-30 — AgentHUD fleet build:** read CLI session snapshots in a
+  paginated list beside Ask. [Setup and transport measurements](docs/AGENTHUD.md).
 - **2026-10-25 — v0.1.3:** G2 Claude app, authenticated Node bridge, desktop
   walkthrough and SDK 0.0.14 packaging. [Changes](CHANGELOG.md).
 - **Next:** packaged Even Hub connection testing, physical lens delivery, page
@@ -93,7 +97,10 @@ configured by your existing CLI installation.
 
 ## Verify the results
 
+Reproduce the v0.1.3 measurements from its source tag:
+
 ```bash
+git switch --detach v0.1.3
 npm ci
 npm run typecheck
 npm run build

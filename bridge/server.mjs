@@ -15,7 +15,10 @@
 
 import { createServer } from 'node:http'
 import { execFile } from 'node:child_process'
+import { pathToFileURL } from 'node:url'
 import { createPairingCode, redeemPairingCode, verifyToken } from './auth.mjs'
+import { createFleetService } from './fleet.mjs'
+
 
 const PORT = Number(process.env.BRIDGE_PORT ?? 8787)
 // Loopback by default: Tailscale proxies in, so binding wider is needless exposure.
@@ -68,11 +71,37 @@ function askClaude(prompt) {
   })
 }
 
-const server = createServer(async (req, res) => {
+export function createBridgeServer({ fleet = createFleetService(), ask = askClaude } = {}) {
+return createServer(async (req, res) => {
   if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end() }
 
   if (req.method === 'GET' && req.url === '/health') {
     return send(res, 200, { ok: true, service: 'g2-claude-bridge' })
+  }
+
+  if (req.url === '/fleet' && req.method === 'GET') {
+    if (!await verifyToken(bearer(req))) return send(res, 401, { ok: false, error: 'Pair this device first' })
+    try {
+      const snapshot = await fleet.get()
+      return send(res, 200, { ok: true, ...snapshot })
+    } catch (e) {
+      return send(res, 503, { ok: false, error: e.message })
+    }
+  }
+
+  if (req.url === '/fleet/render-receipts' && req.method === 'POST') {
+    const device = await verifyToken(bearer(req))
+    if (!device) return send(res, 401, { ok: false, error: 'Pair this device first' })
+    try {
+      const receipt = await fleet.receipt(await readJson(req), device.id, {
+        origin: req.headers.origin ?? null,
+        peer: req.socket.remoteAddress ?? null,
+        tailnet_identity_header: Boolean(req.headers['tailscale-user-login']),
+      })
+      return send(res, 200, { ok: true, receipt })
+    } catch (e) {
+      return send(res, 400, { ok: false, error: e.message })
+    }
   }
 
   if (req.method === 'POST' && req.url === '/pair') {
@@ -117,7 +146,7 @@ const server = createServer(async (req, res) => {
       : (req.socket.remoteAddress ?? 'unknown')
     console.log(`[ask ] (${device.name} via ${via}) ${JSON.stringify(prompt.slice(0, 80))}`)
     try {
-      const text = await askClaude(prompt)
+      const text = await ask(prompt)
       console.log(`[ok  ] ${text.length} chars in ${Date.now() - started}ms`)
       return send(res, 200, { ok: true, text, ms: Date.now() - started })
     } catch (e) {
@@ -128,9 +157,13 @@ const server = createServer(async (req, res) => {
 
   send(res, 404, { ok: false, error: 'not found' })
 })
+}
 
+if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
+const server = createBridgeServer()
 server.listen(PORT, HOST, () => {
   console.log(`g2-claude-bridge listening on ${HOST}:${PORT}`)
   const { code } = createPairingCode()
   console.log(`\n  pairing code: ${code}    (valid 5 minutes, single use)\n`)
 })
+}

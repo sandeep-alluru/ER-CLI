@@ -3,6 +3,7 @@ import { GlassesDisplay } from './glasses'
 import { mountPhoneUI } from './phone'
 import { initStore } from './lib/store'
 import { loadState, isPaired, report } from './lib/bridge'
+import { FleetView } from './fleet'
 
 const bridge = await waitForEvenAppBridge()
 
@@ -12,10 +13,11 @@ initStore(bridge)
 await loadState()
 
 const display = new GlassesDisplay(bridge)
+let fleet: FleetView | undefined
 
 const IDLE = isPaired()
-  ? 'G2 Claude\n\nType a question on your phone.\nThe answer lands here.'
-  : 'G2 Claude\n\nNot paired yet.\nOpen this app on your phone to pair.'
+  ? import.meta.env.VITE_AGENTHUD === '1' ? 'AgentHUD\n\nReading fleet...' : 'G2 Claude\n\nType a question on your phone.\nThe answer lands here.'
+  : 'Pair this app on your phone.\n\nEnter the code from the bridge.'
 
 // `createStartUpPageContainer` returns 0 on success. A non-zero result means
 // the glasses never got a page, which looks to the wearer like the app simply
@@ -57,16 +59,19 @@ const unsubscribe = bridge.onEvenHubEvent((event) => {
     sysType === OsEventTypeList.DOUBLE_CLICK_EVENT ||
     textType === OsEventTypeList.DOUBLE_CLICK_EVENT
   ) {
+    fleet?.leave()
     bridge.shutDownPageContainer(1)
     return
   }
 
   // Scroll turns pages of a long answer.
   if (sysType === OsEventTypeList.SCROLL_BOTTOM_EVENT || textType === OsEventTypeList.SCROLL_BOTTOM_EVENT) {
+    if (fleet?.active) { fleet.movePage(1); return }
     display.nextPage()
     return
   }
   if (sysType === OsEventTypeList.SCROLL_TOP_EVENT || textType === OsEventTypeList.SCROLL_TOP_EVENT) {
+    if (fleet?.active) { fleet.movePage(-1); return }
     display.prevPage()
     return
   }
@@ -74,17 +79,30 @@ const unsubscribe = bridge.onEvenHubEvent((event) => {
   // Coming back to the foreground can leave the glasses on a stale frame, so
   // redraw whatever the display already holds.
   if (sysType === OsEventTypeList.FOREGROUND_ENTER_EVENT) {
+    if (fleet?.active) { void fleet.refresh(); return }
     display.redraw()
     return
   }
 
   if (sysType === OsEventTypeList.SYSTEM_EXIT_EVENT || sysType === OsEventTypeList.ABNORMAL_EXIT_EVENT) {
+    fleet?.leave()
     unsubscribe()
   }
+  if (fleet?.active && (sysType === OsEventTypeList.CLICK_EVENT || textType === OsEventTypeList.CLICK_EVENT)) void fleet.refresh()
 })
 
 mountPhoneUI(document.getElementById('app')!, {
   onStatus: (text) => display.show(`G2 Claude\n\n${text}`),
   onAnswer: (text) => display.show(text, 'scroll to read · double-tap to exit'),
   onError: (text) => display.show(`Problem\n\n${text}`),
+  onFleet: (root, onBack) => {
+    fleet?.leave()
+    fleet = new FleetView(root, {
+      onBack: () => { display.show(isPaired() ? 'G2 Claude\n\nType a question on your phone.' : 'Pair this app on your phone.'); onBack() },
+      onFrame: async (text, footer) => {
+        const [result, device] = await Promise.all([display.showAndConfirm(text, footer), bridge.getDeviceInfo()])
+        return { lines: result.lines, sdk_accepted: result.accepted, runtime: device ? 'even-hub' : 'desktop', device_model: device?.model === 'g2' ? 'g2' : null }
+      },
+    })
+  },
 })

@@ -10,6 +10,7 @@ export interface PhoneCallbacks {
   onStatus(text: string): void
   onAnswer(text: string): void
   onError(text: string): void
+  onFleet?(root: HTMLElement, onBack: () => void): void
 }
 
 const el = <K extends keyof HTMLElementTagNameMap>(
@@ -23,8 +24,9 @@ const el = <K extends keyof HTMLElementTagNameMap>(
 }
 
 export function mountPhoneUI(root: HTMLElement, cb: PhoneCallbacks): void {
-  const render = () => {
-    root.replaceChildren(isPaired() ? askView() : pairView())
+  const render = (preferFleet = import.meta.env.VITE_AGENTHUD === '1') => {
+    if (isPaired() && preferFleet && cb.onFleet) cb.onFleet(root, () => render(false))
+    else root.replaceChildren(isPaired() ? askView() : pairView())
   }
 
   /**
@@ -92,7 +94,7 @@ export function mountPhoneUI(root: HTMLElement, cb: PhoneCallbacks): void {
     }
 
     return el('div', { className: 'card' }, [
-      el('h1', { textContent: 'G2 Claude' }),
+      el('h1', { textContent: import.meta.env.VITE_AGENTHUD === '1' ? 'AgentHUD' : 'G2 Claude' }),
       el('p', {
         className: 'muted',
         textContent:
@@ -154,6 +156,7 @@ export function mountPhoneUI(root: HTMLElement, cb: PhoneCallbacks): void {
 
     return el('div', { className: 'card' }, [
       el('h1', { textContent: 'G2 Claude' }),
+      ...(cb.onFleet ? [el('button', { textContent: 'Open AgentHUD fleet', onclick: () => cb.onFleet!(root, () => render(false)) })] : []),
       box,
       button,
       status,

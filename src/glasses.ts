@@ -83,6 +83,17 @@ export class GlassesDisplay {
     this.#push()
   }
 
+  async showAndConfirm(text: string, footer: string): Promise<{ lines: string[]; accepted: boolean }> {
+    this.#setBody(text, footer)
+    const content = this.#render()
+    const accepted = await this.#bridge.textContainerUpgrade(new TextContainerUpgrade({
+      containerID: CONTAINER_ID,
+      containerName: CONTAINER_NAME,
+      content,
+    }))
+    return { lines: content.split('\n'), accepted: accepted === true }
+  }
+
   /** Re-send the current frame, e.g. after returning to the foreground. */
   redraw(): void {
     this.#push()

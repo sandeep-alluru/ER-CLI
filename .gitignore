@@ -11,5 +11,6 @@ dist/
 *.webm
 *.mp4
 .launch-capture/
+.agenthud-build/
 
 !assets/*.mp4

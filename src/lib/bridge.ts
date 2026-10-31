@@ -68,14 +68,15 @@ export async function setBridgeUrl(url: string): Promise<void> {
   }
 }
 
-async function post(path: string, body: unknown, auth = false): Promise<any> {
+export async function post(path: string, body: unknown, auth = false, method = 'POST'): Promise<any> {
   const res = await fetch(`${base}${path}`, {
-    method: 'POST',
+    method,
     headers: {
       'Content-Type': 'application/json',
       ...(auth ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify(body),
+    body: method === 'GET' ? undefined : JSON.stringify(body),
+    signal: path.startsWith('/fleet') ? AbortSignal.timeout(25_000) : undefined,
   })
   // The bridge answers JSON on every path, including its error paths, so a
   // parse error means something else replied — a proxy, or the wrong port.
@@ -85,7 +86,7 @@ async function post(path: string, body: unknown, auth = false): Promise<any> {
   } catch {
     throw new Error(`bridge returned non-JSON (HTTP ${res.status})`)
   }
-  if (!res.ok || json?.ok === false) throw new Error(json?.error ?? `HTTP ${res.status}`)
+  if (!res.ok || json?.ok === false) throw Object.assign(new Error(json?.error ?? `HTTP ${res.status}`), { status: res.status })
   return json
 }
 

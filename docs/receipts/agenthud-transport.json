@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "observation_kind": "desktop_transport",
+  "started_at": "2026-10-31T00:05:21.275Z",
+  "completed_at": "2026-10-31T00:05:31.082Z",
+  "snapshot_id": "cff5b7762232d035720f168fb4f83c6693ebee50385a0e8c98e4a47f5a5e42fb",
+  "records": 76,
+  "records_sha256": "ab42a8b537b7c6ae0425b546ba8794235903c917e2779b8d8bc2e70e3031801c",
+  "source_counts": [
+    {
+      "name": "board",
+      "records": 72,
+      "updated_at": "2026-10-30T15:06:06.089453+00:00"
+    },
+    {
+      "name": "harness",
+      "records": 4,
+      "updated_at": "2026-09-27T18:14:05.115752+00:00"
+    }
+  ],
+  "stale_records": 76,
+  "layout": {
+    "screen_width_px": 576,
+    "screen_height_px": 288,
+    "text_width_px": 568,
+    "body_lines": 9,
+    "max_observed_line_width_px": 333
+  },
+  "frames": [
+    {
+      "snapshot_id": "cff5b7762232d035720f168fb4f83c6693ebee50385a0e8c98e4a47f5a5e42fb",
+      "frame_sha256": "81d3bedea712df6f05f564d31fa16950cf723deba38338a22e27420a0f33f080",
+      "received_at": "2026-10-31T00:05:22.654Z",
+      "sdk_accepted": false,
+      "runtime": "desktop",
+      "device_model": null,
+      "line_count": 10
+    },
+    {
+      "snapshot_id": "cff5b7762232d035720f168fb4f83c6693ebee50385a0e8c98e4a47f5a5e42fb",
+      "frame_sha256": "b574548962fc22cd3cb24a69211e4248675a0f673fa6904cd4f563a43c5b66a5",
+      "received_at": "2026-10-31T00:05:23.130Z",
+      "sdk_accepted": false,
+      "runtime": "desktop",
+      "device_model": null,
+      "line_count": 10
+    },
+    {
+      "snapshot_id": "cff5b7762232d035720f168fb4f83c6693ebee50385a0e8c98e4a47f5a5e42fb",
+      "frame_sha256": "81d3bedea712df6f05f564d31fa16950cf723deba38338a22e27420a0f33f080",
+      "received_at": "2026-10-31T00:05:23.196Z",
+      "sdk_accepted": false,
+      "runtime": "desktop",
+      "device_model": null,
+      "line_count": 10
+    },
+    {
+      "snapshot_id": "cff5b7762232d035720f168fb4f83c6693ebee50385a0e8c98e4a47f5a5e42fb",
+      "frame_sha256": "81d3bedea712df6f05f564d31fa16950cf723deba38338a22e27420a0f33f080",
+      "received_at": "2026-10-31T00:05:30.608Z",
+      "sdk_accepted": false,
+      "runtime": "desktop",
+      "device_model": null,
+      "line_count": 10
+    }
+  ],
+  "phone_navigation": "next and previous pages exercised",
+  "existing_ask": "real Claude CLI response received",
+  "browser_page_errors": 0,
+  "revoked_device": "returns to pairing",
+  "physical_observation": null,
+  "source_sha256": {
+    "app.agenthud.json": "9e97bdb850b06fc63e895c4704f48c381d15c7af62c2d6f6020cb0db69ec819c",
+    "app.json": "e44f85cb3c4f7237ce4f0fb493d5207fae2b73fccbd918d2bb8d225c496135fa",
+    "bridge/auth.mjs": "4a876df3bc7c54ed655d7720206767d31994fcc1c3b7de1dc88c42f71cdf2414",
+    "bridge/collect_fleet.py": "fdb6bb188c09eb08973d8a20a18a453f84440dd4695c6c59498212e6dd3eea78",
+    "bridge/fleet.mjs": "3b6d40d7507f057f65f2ae748bb4ba5e1bd19b206280634006838a5981121efc",
+    "bridge/server.mjs": "1e4aef3d282fb81976f672b9191e49817832bb5839468ffb2bd7420d4cbe9bea",
+    "index.html": "525ffec81242c628db492a01464577860e370f6baccbb2e2ec9fd11acf21de76",
+    "package-lock.json": "53a9c0144b4d2489200fd0c712730cbc0fc0e84804ba651b58f0596a5df8fa0b",
+    "package.json": "60dfa5505d94ff4d77c10b4339548a9eeaf5d403357634ce4119c20e174825a8",
+    "scripts/check-agenthud.mjs": "fd4bc83fddb8ce14c6f165b284c977cd6efdb2d7a316f8ef64a5691613af0eef",
+    "scripts/check-evidence.mjs": "f08412d33cefe1b90f904c6aee2047fe81cc0e027da6b84d0112f91961acd735",
+    "scripts/pack-agenthud.mjs": "1e5b96131d6f6b767fe4e7046b6a1a057d3b864289915df2d9652bf8d5fba08e",
+    "scripts/prove-agenthud.mjs": "876fd97b814f56d19d53d0d15c3b0c8a306eceb835588f5402a1cc0b0be0d43e",
+    "scripts/write-agenthud-receipt.mjs": "687a282612faafcacf60e922ea79a2756e08d78da674626879953258c7104ccd",
+    "src/fleet.ts": "86ee1447da4bbb798d72ac249cbd8cc9ca131d24dd305cae8b584fc552e26e2a",
+    "src/glasses.ts": "3da699eb3449affbb51f684f7d2d334ab598edd162baf58a0cfb5c2467a52d6c",
+    "src/lib/bridge.ts": "065b1cf74d68fd8914faef2244fba43db0f0da397a4950d7b3bc5e1c389ac9f5",
+    "src/lib/fleet.ts": "a913349e2d2a5e1d3788a6a8e08ad2aa97bdad3d2770f0a1a2024ffd8ff2afdf",
+    "src/lib/store.ts": "4bbfd19e771d15754cb0013f2fd7f9504f9e97e40390b1c9d385026f1e50196d",
+    "src/lib/text.ts": "8763e78d44c8f9835b3081e11686ae75be1a2d7b342a08e193e7377ccac79048",
+    "src/main.ts": "7de1a682ba47a6225afe471f539e4ee981cef73f08eaad850e573e86e710064c",
+    "src/phone.ts": "04fe9cfa69af646bb50239cf8640198ab620afbb4f1b74716b2220530ac69769",
+    "src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+    "tests/fleet-layout.test.mjs": "025bf9c074680ff15548c383ea09325a03651d38ffc1d51c8e03f0b35eade4c6",
+    "tests/fleet-server.test.mjs": "99279cf6be41059fe5fb8ce71c64239d500b97fd8015d658826751f018b1eeb4",
+    "tests/fleet.test.mjs": "98bd2ff7b50cb878490313d98d833ff95918c8a743f238b5a7aff8c3d9186fbb",
+    "tsconfig.json": "96d6ac2cdd5e0dfb7b27080b606c6ce1e5d900f8f8baed4f10e30387ec8f03be",
+    "vite.config.ts": "72c661bba2d7f465d61c4eaa45c60418a09b23dc3e69695f9e2eeea83c8bc982"
+  }
+}
