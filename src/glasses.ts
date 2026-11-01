@@ -4,6 +4,7 @@ import {
   TextContainerUpgrade,
   ImageContainerProperty,
   ImageRawDataUpdate,
+  RebuildPageContainer,
 } from '@evenrealities/even_hub_sdk'
 import { SCREEN_W, SCREEN_H, PADDING, BODY_LINES, wrapToWidth, paginate } from './lib/text'
 
@@ -27,6 +28,8 @@ export class GlassesDisplay {
   #footer = ''
   #tiles: boolean
   #lastTitle = ''
+  #tileLayout = false
+  #updates: Promise<boolean> = Promise.resolve(true)
 
   constructor(bridge: Bridge, tiles = false) {
     this.#bridge = bridge
@@ -35,28 +38,20 @@ export class GlassesDisplay {
 
   async start(initial: string): Promise<number> {
     this.#setBody(initial, 'double-tap to exit')
-    return this.#bridge.createStartUpPageContainer(
-      new CreateStartUpPageContainer({
-        containerTotalNum: this.#tiles ? 5 : 1,
-        ...(this.#tiles ? { imageObject: Array.from({ length: 4 }, (_, i) => new ImageContainerProperty({ xPosition: i * 144, yPosition: 30, width: 144, height: 54, containerID: i + 2, containerName: `title${i}`, zOrderIndex: i + 1 })) } : {}),
-        textObject: [
-          new TextContainerProperty({
-            xPosition: 0,
-            yPosition: 0,
-            width: SCREEN_W,
-            height: SCREEN_H,
-            borderWidth: 0,
-            borderColor: 5,
-            paddingLength: PADDING,
-            containerID: CONTAINER_ID,
-            containerName: CONTAINER_NAME,
-            content: this.#render(),
-            isEventCapture: 1,
-            ...(this.#tiles ? { zOrderIndex: 0 } : {}),
-          }),
-        ],
-      }),
-    )
+    return this.#bridge.createStartUpPageContainer(new CreateStartUpPageContainer(this.#containers(this.#render(), false)))
+  }
+
+  #containers(content: string, tiles: boolean) {
+    return {
+      containerTotalNum: tiles ? 5 : 1,
+      ...(tiles ? { imageObject: Array.from({ length: 4 }, (_, i) => new ImageContainerProperty({ xPosition: i * 144, yPosition: 30, width: 144, height: 54, containerID: i + 2, containerName: `title${i}`, zOrderIndex: i + 1 })) } : {}),
+      textObject: [new TextContainerProperty({
+        xPosition: 0, yPosition: 0, width: SCREEN_W, height: SCREEN_H,
+        borderWidth: 0, borderColor: 5, paddingLength: PADDING,
+        containerID: CONTAINER_ID, containerName: CONTAINER_NAME,
+        content, isEventCapture: 1, ...(tiles ? { zOrderIndex: 0 } : {}),
+      })],
+    }
   }
 
   #setBody(text: string, footer: string): void {
@@ -75,14 +70,25 @@ export class GlassesDisplay {
   }
 
   #push(): void {
-    void this.#title('')
-    this.#bridge.textContainerUpgrade(
-      new TextContainerUpgrade({
-        containerID: CONTAINER_ID,
-        containerName: CONTAINER_NAME,
-        content: this.#render(),
-      }),
-    )
+    void this.#submit(this.#render()).catch(error => console.error('Display update:', error))
+  }
+
+  #submit(content: string, title = ''): Promise<boolean> {
+    this.#updates = this.#updates.catch(() => false).then(async () => {
+      const tiles = this.#tiles && Boolean(title)
+      let accepted: boolean
+      if (tiles !== this.#tileLayout) {
+        accepted = await this.#bridge.rebuildPageContainer(new RebuildPageContainer(this.#containers(content, tiles)))
+        if (!accepted) return false
+        this.#tileLayout = tiles
+        this.#lastTitle = ''
+      } else {
+        accepted = await this.#bridge.textContainerUpgrade(new TextContainerUpgrade({ containerID: CONTAINER_ID, containerName: CONTAINER_NAME, content }))
+      }
+      const imageAccepted = tiles ? await this.#title(title) : true
+      return accepted === true && imageAccepted
+    })
+    return this.#updates
   }
 
   /** Replace what is on screen. */
@@ -94,13 +100,8 @@ export class GlassesDisplay {
   async showAndConfirm(text: string, footer: string, title = ''): Promise<{ lines: string[]; accepted: boolean }> {
     this.#setBody(text, footer)
     const content = this.#render()
-    const accepted = await this.#bridge.textContainerUpgrade(new TextContainerUpgrade({
-      containerID: CONTAINER_ID,
-      containerName: CONTAINER_NAME,
-      content,
-    }))
-    const imageAccepted = await this.#title(title)
-    return { lines: content.split('\n'), accepted: accepted === true && imageAccepted }
+    const accepted = await this.#submit(content, title)
+    return { lines: content.split('\n'), accepted }
   }
 
   async #title(title: string): Promise<boolean> {

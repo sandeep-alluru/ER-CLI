@@ -53,10 +53,10 @@ const events = [], started = new Date().toISOString()
 const port = Number(process.env.AGENTHUD_SIM_PORT || 9898), simBase = `http://127.0.0.1:${port}`
 async function frames() { try { return (await readFile(join(output, 'renders', 'renders.jsonl'), 'utf8')).trim().split('\n').filter(Boolean).map(JSON.parse) } catch { return [] } }
 async function latest() { return (await frames()).at(-1) }
-async function capture(label) {
+async function capture(label, associate = true) {
   const response = await fetch(simBase + '/api/screenshot/glasses'); assert.ok(response.ok)
   const bytes = Buffer.from(await response.arrayBuffer()); await writeFile(join(output, label + '.png'), bytes, { mode: 0o600 })
-  const frame = await latest(); events.push({ label, receipt_id: frame?.receipt_id, lines: frame?.lines, screenshot_sha256: createHash('sha256').update(bytes).digest('hex') })
+  const frame = associate ? await latest() : undefined; events.push({ label, receipt_id: frame?.receipt_id, lines: frame?.lines, screenshot_sha256: createHash('sha256').update(bytes).digest('hex') })
 }
 async function input(action, match) {
   const previous = (await latest())?.receipt_id
@@ -115,9 +115,14 @@ try {
   await until(async () => (await latest())?.lines[0] === 'Instruction response', 195000)
   await capture('12-instruction-response')
   assert.equal(asks.length, 1, 'Exactly one confirmed send')
+  phase = 'existing-ask-return'
+  await drive(`[...document.querySelectorAll('button')].find(b=>b.textContent==='Ask Claude').click();return true`)
+  await pause(1000)
+  await capture('13-existing-ask', false)
+  execFileSync('python3', ['-c', "from PIL import Image; import sys; im=Image.open(sys.argv[1]); assert im.size==(576,288) and im.mode=='RGBA'; assert any(v>0 for v in im.getchannel('A').crop((0,54,576,82)).getdata()), 'Tile images obscured the Ask body'", join(output, '13-existing-ask.png')])
   const consoleResponse = await fetch(simBase + '/api/console'); await record('console.json', await consoleResponse.json())
   const all = await frames()
-  await record('simulator-receipt.json', { started_at: started, completed_at: new Date().toISOString(), runtime: 'official-evenhub-simulator', simulator_version: '0.9.5', source: 'Local UI fixture; production before/after recorded separately', frames: all.length, sdk_accepted: all.every(f=>f.sdk_accepted), fleet_reads: fleetReads, confirmed_sends: asks.length, events, physical_microphone: 'pending', receiving_transcript: 'Verify independently against instruction.json before claiming delivery' })
+  await record('simulator-receipt.json', { started_at: started, completed_at: new Date().toISOString(), runtime: 'official-evenhub-simulator', simulator_version: '0.9.5', source: 'Local UI fixture; production before/after recorded separately', frames: all.length, sdk_accepted: all.every(f=>f.sdk_accepted), fleet_reads: fleetReads, confirmed_sends: asks.length, existing_ask_body_visible: true, events, physical_microphone: 'pending', receiving_transcript: 'Verify independently against instruction.json before claiming delivery' })
   console.log(JSON.stringify({ frames: all.length, fleet_reads: fleetReads, confirmed_sends: asks.length, output }))
 } catch (error) {
   await record('blocker.json', { phase, observed_at: new Date().toISOString(), error: error.message })

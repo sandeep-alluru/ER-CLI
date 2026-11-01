@@ -86,7 +86,8 @@ AGENTHUD_PROOF_TARGET=your-existing-local-session \
 node scripts/prove-agenthud-simulator.mjs
 ```
 
-The proof uses the official simulator, Xvfb on Linux, and local board cases for
+The proof uses the official simulator, Xvfb on Linux, Python with Pillow for
+framebuffer checks, and local board cases for
 repeatable controls. It reads the native framebuffer and saves the bridge's
 render receipts. Its instruction test targets the named existing local session
 through the real Ask route. Production board snapshots are recorded separately
