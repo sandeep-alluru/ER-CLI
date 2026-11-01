@@ -1,9 +1,10 @@
-import { waitForEvenAppBridge, OsEventTypeList } from '@evenrealities/even_hub_sdk'
+import { waitForEvenAppBridge } from '@evenrealities/even_hub_sdk'
 import { GlassesDisplay } from './glasses'
 import { mountPhoneUI } from './phone'
 import { initStore } from './lib/store'
 import { loadState, isPaired, report } from './lib/bridge'
 import { FleetView } from './fleet'
+import { gestureOf } from './lib/gestures'
 
 const bridge = await waitForEvenAppBridge()
 
@@ -12,7 +13,7 @@ const bridge = await waitForEvenAppBridge()
 initStore(bridge)
 await loadState()
 
-const display = new GlassesDisplay(bridge)
+const display = new GlassesDisplay(bridge, import.meta.env.VITE_AGENTHUD === '1')
 let fleet: FleetView | undefined
 
 const IDLE = isPaired()
@@ -31,64 +32,28 @@ try {
 console.log('Page created:', startResult === 0 ? 'success' : `failed (${startResult})`)
 report(`startup: paired=${isPaired()} createStartUpPageContainer=${startResult}`)
 
-// Reads the event type out of one envelope.
-//
-// CLICK_EVENT is 0, and protobuf omits zero-value fields on the wire, so a
-// single tap arrives as an envelope whose `eventType` is `undefined`. The
-// default has to be resolved INSIDE the envelope check. Writing
-// `event.sysEvent?.eventType ?? OsEventTypeList.CLICK_EVENT` instead would
-// read CLICK on events that carry no `sysEvent` at all, so every scroll,
-// exit and audio frame would fire the tap handler.
-function eventTypeOf(envelope?: { eventType?: OsEventTypeList }): OsEventTypeList | null {
-  if (!envelope) return null
-  return envelope.eventType ?? OsEventTypeList.CLICK_EVENT
-}
-
-// Event routing, critical details:
-//   • Taps/double-taps/lifecycle come through `event.sysEvent`.
-//     Scroll gestures come through `event.textEvent`. Never mix them.
-//   • Double-tap → `shutDownPageContainer(1)` is a root-level check: it
-//     must fire no matter which envelope the event arrives in, so users
-//     can always exit the app.
-//   • Check DOUBLE_CLICK_EVENT before CLICK_EVENT.
+// Resolve envelopes once; scroll takes precedence over an empty click envelope.
 const unsubscribe = bridge.onEvenHubEvent((event) => {
-  const sysType = eventTypeOf(event.sysEvent)
-  const textType = eventTypeOf(event.textEvent)
-
-  if (
-    sysType === OsEventTypeList.DOUBLE_CLICK_EVENT ||
-    textType === OsEventTypeList.DOUBLE_CLICK_EVENT
-  ) {
+  const gesture = gestureOf(event)
+  if (gesture === 'back') {
+    if (fleet?.active && !fleet.back()) return
     fleet?.leave()
-    bridge.shutDownPageContainer(1)
-    return
-  }
-
-  // Scroll turns pages of a long answer.
-  if (sysType === OsEventTypeList.SCROLL_BOTTOM_EVENT || textType === OsEventTypeList.SCROLL_BOTTOM_EVENT) {
-    if (fleet?.active) { fleet.movePage(1); return }
-    display.nextPage()
-    return
-  }
-  if (sysType === OsEventTypeList.SCROLL_TOP_EVENT || textType === OsEventTypeList.SCROLL_TOP_EVENT) {
-    if (fleet?.active) { fleet.movePage(-1); return }
-    display.prevPage()
-    return
-  }
-
-  // Coming back to the foreground can leave the glasses on a stale frame, so
-  // redraw whatever the display already holds.
-  if (sysType === OsEventTypeList.FOREGROUND_ENTER_EVENT) {
-    if (fleet?.active) { void fleet.refresh(); return }
-    display.redraw()
-    return
-  }
-
-  if (sysType === OsEventTypeList.SYSTEM_EXIT_EVENT || sysType === OsEventTypeList.ABNORMAL_EXIT_EVENT) {
+    void bridge.shutDownPageContainer(1)
+  } else if (gesture === 'next') {
+    if (fleet?.active) fleet.movePage(1)
+    else display.nextPage()
+  } else if (gesture === 'previous') {
+    if (fleet?.active) fleet.movePage(-1)
+    else display.prevPage()
+  } else if (gesture === 'tap') {
+    if (fleet?.active) fleet.tap()
+  } else if (gesture === 'foreground') {
+    if (fleet?.active) void fleet.redraw()
+    else display.redraw()
+  } else if (gesture === 'exit') {
     fleet?.leave()
     unsubscribe()
   }
-  if (fleet?.active && (sysType === OsEventTypeList.CLICK_EVENT || textType === OsEventTypeList.CLICK_EVENT)) void fleet.refresh()
 })
 
 mountPhoneUI(document.getElementById('app')!, {
@@ -99,8 +64,8 @@ mountPhoneUI(document.getElementById('app')!, {
     fleet?.leave()
     fleet = new FleetView(root, {
       onBack: () => { display.show(isPaired() ? 'G2 Claude\n\nType a question on your phone.' : 'Pair this app on your phone.'); onBack() },
-      onFrame: async (text, footer) => {
-        const [result, device] = await Promise.all([display.showAndConfirm(text, footer), bridge.getDeviceInfo()])
+      onFrame: async (text, footer, title) => {
+        const [result, device] = await Promise.all([display.showAndConfirm(text, footer, title), bridge.getDeviceInfo()])
         return { lines: result.lines, sdk_accepted: result.accepted, runtime: device ? 'even-hub' : 'desktop', device_model: device?.model === 'g2' ? 'g2' : null }
       },
     })

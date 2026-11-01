@@ -5,7 +5,7 @@ import assert from 'node:assert/strict'
 
 if (!process.argv[2]) throw new Error('Pass the private transport-receipt.json produced by prove-agenthud.mjs')
 const receipt = JSON.parse(await readFile(process.argv[2], 'utf8'))
-assert.equal(receipt.observation_kind, 'desktop_transport')
+assert.ok(['desktop_transport', 'official_simulator'].includes(receipt.observation_kind))
 assert.equal(receipt.physical_observation, null)
 const files = ['app.json', 'app.agenthud.json', 'package.json', 'package-lock.json', 'index.html', 'vite.config.ts', 'tsconfig.json']
 for (const dir of ['bridge', 'src', 'scripts', 'tests']) {

@@ -13,7 +13,7 @@ await writeFile('.agenthud-build/app.json', JSON.stringify(manifest, null, 2) + 
 const env = { ...process.env, VITE_BRIDGE_URL: url.href.replace(/\/$/, ''), VITE_AGENTHUD: '1' }
 for (const [command, args] of [
   ['npm', ['run', 'build']],
-  [resolve('node_modules/.bin/evenhub'), ['pack', '.agenthud-build/app.json', 'dist', '--sdk-ver', '0.0.14', '-o', 'agenthud-0.2.0.ehpk']],
+  [resolve('node_modules/.bin/evenhub'), ['pack', '.agenthud-build/app.json', 'dist', '--sdk-ver', '0.0.14', '-o', `agenthud-${manifest.version}.ehpk`]],
 ]) {
   const result = spawnSync(command, args, { env, stdio: 'inherit' })
   if (result.error) throw result.error

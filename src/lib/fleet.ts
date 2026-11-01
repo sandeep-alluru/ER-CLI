@@ -1,5 +1,5 @@
 import { getTextWidth } from '@evenrealities/pretext'
-import { INNER_W, BODY_LINES } from './text'
+import { INNER_W, wrapToWidth, paginate } from './text'
 import { post, unpair } from './bridge'
 
 export type FleetState = 'working' | 'parked' | 'done' | 'failed' | 'needs-decision'
@@ -61,20 +61,38 @@ export function fitLine(value: string, width = INNER_W, prefix = '', suffix = ''
 }
 
 const labels: Record<FleetState, string> = {
-  working: 'WORK', parked: 'PARK', done: 'DONE', failed: 'ERROR', 'needs-decision': 'NEEDS YOU',
+  working: 'Working', parked: 'Parked', done: 'Done', failed: 'Needs attention', 'needs-decision': 'Needs you',
 }
-export const FLEET_PAGE_SIZE = BODY_LINES - 1
+export const FLEET_PAGE_SIZE = 1
+export interface TileFrame { text: string; footer: string; title: string }
 
-export function fleetFrame(snapshot: FleetSnapshot, selected: number): { text: string; footer: string } {
+export function fleetFrame(snapshot: FleetSnapshot, selected: number): TileFrame {
   const count = snapshot.records.length
-  const cursor = Math.max(0, Math.min(selected, count - 1))
-  const page = Math.floor(cursor / FLEET_PAGE_SIZE)
-  const lines = [fitLine(`AgentHUD fleet · ${count}`)]
-  for (const [offset, record] of snapshot.records.slice(page * FLEET_PAGE_SIZE, (page + 1) * FLEET_PAGE_SIZE).entries()) {
-    const marker = page * FLEET_PAGE_SIZE + offset === cursor ? '>' : ' '
-    const suffix = ` ${labels[record.state]}${record.source_stale ? ' ~' : ''}`
-    lines.push(fitLine(record.name, INNER_W, marker + ' ', suffix))
+  if (!count) return { title: '', text: 'AgentHUD\n\nNo current sessions\n\nRefresh from your phone.', footer: 'double: exit' }
+  const cursor = Math.max(0, Math.min(selected, count - 1)), record = snapshot.records[cursor]
+  return {
+    title: record.name,
+    text: ['AgentHUD · Fleet', '', '', labels[record.state], '', fitLine(record.pending_decision || record.current_task || 'Ready for the next task'), '', '', 'tap: open · scroll: change'].join('\n'),
+    footer: fitLine(record.name, INNER_W, `${cursor + 1}/${count} · `),
   }
-  if (!count) lines.push('Fleet source connected · no sessions')
-  return { text: lines.join('\n'), footer: fitLine(`tap: refresh · double: exit  ${page + 1}/${Math.max(1, Math.ceil(count / FLEET_PAGE_SIZE))}`) }
+}
+
+export function detailPages(record: FleetRecord): string[][] {
+  return paginate(wrapToWidth([
+    record.pending_decision || record.current_task || 'Ready for the next task',
+    record.last_output ? `Latest: ${record.last_output}` : '',
+    record.last_artifact ? `Artifact: ${record.last_artifact.name}` : '',
+    record.updated_at ? `Activity: ${new Date(record.updated_at).toISOString()}` : '',
+  ].filter(Boolean).join('\n')), 3)
+}
+
+export function detailFrame(record: FleetRecord, page: number): TileFrame {
+  const pages = detailPages(record), index = Math.max(0, Math.min(page, pages.length - 1))
+  return { title: record.name, text: ['Agent detail', '', '', labels[record.state], '', ...pages[index], ...Array(3 - pages[index].length).fill(''), 'tap: dictate on phone'].join('\n'), footer: fitLine(`scroll: read · double: fleet  ${index + 1}/${pages.length}`) }
+}
+
+export function transcriptPages(text: string): string[][] { return paginate(wrapToWidth(text), 5) }
+
+export function instructionPrompt(record: FleetRecord, words: string): string {
+  return `Deliver this confirmed instruction to the EXISTING LOCAL session named ${JSON.stringify(record.name)} using its existing input interface. First check that exact local tmux session. Do not start a replacement session, contact another machine, edit files, or execute the instruction yourself. If a tool or hook rejects a call, stop immediately and report the exact error; do not work around it or investigate unrelated files/services. Verify delivery in the receiving session's own transcript and report its path and the exact matching text. If no such local session/interface is available, report that; do not claim delivery.\nInstruction (verbatim):\n${words}`
 }

@@ -4,7 +4,6 @@ import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createHash } from 'node:crypto'
-import { execFileSync } from 'node:child_process'
 import { loadFleet, createFleetService } from '../bridge/fleet.mjs'
 
 test('collector reads board states and existing artifacts without changing sources', async () => {
@@ -17,20 +16,17 @@ test('collector reads board states and existing artifacts without changing sourc
     const config = join(dir, 'sources.json')
     await writeFile(config, JSON.stringify({ board_registry: registry }))
     const result = await loadFleet(config)
-    assert.deepEqual(result.records.map(r => r.state), ['needs-decision', 'working', 'done'])
-    assert.equal(result.records[0].pending_decision, 'Choose input A or B')
-    assert.equal(result.records[1].last_artifact.name, 'output.txt')
-    assert.equal(result.records[2].last_artifact, null)
+    assert.deepEqual(result.records.map(r => r.state), ['working', 'needs-decision'])
+    assert.equal(result.records[1].pending_decision, 'Choose input A or B')
+    assert.equal(result.records[0].last_artifact.name, 'output.txt')
     assert.equal(await readFile(registry, 'utf8'), content)
     await writeFile(config, JSON.stringify({ board_registry: registry, stale_after_seconds: -1 }))
     const older = await loadFleet(config)
-    assert.equal(older.records.find(r => r.name === 'Build').state, 'working')
-    assert.equal(older.records.find(r => r.name === 'Build').source_stale, true)
-    assert.equal(older.records.find(r => r.name === 'Build').source_state, 'ACTIVE')
+    assert.deepEqual(older.records, [])
   } finally { await rm(dir, { recursive: true, force: true }) }
 })
 
-test('explicit transcript completion supersedes a board ACTIVE claim without treating metadata age as a new state', async () => {
+test('board state remains authoritative when transcript activity reports completion', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'agenthud-lifecycle-'))
   try {
     const transcript = join(dir, 'session.jsonl'), registry = join(dir, 'SESSIONS.md'), config = join(dir, 'config.json')
@@ -42,9 +38,9 @@ test('explicit transcript completion supersedes a board ACTIVE claim without tre
     await writeFile(registry, `| Session | State | Task | Transcript |\n|---|---|---|---|\n| Build | ACTIVE | Build | ${transcript} |\n`)
     await writeFile(config, JSON.stringify({ board_registry: registry }))
     const snapshot = await loadFleet(config)
-    assert.equal(snapshot.records[0].state, 'parked')
-    assert.equal(snapshot.records[0].source, 'board+harness')
-    assert.equal(snapshot.records[0].source_state, 'task_complete')
+    assert.equal(snapshot.records[0].state, 'working')
+    assert.equal(snapshot.records[0].source, 'board')
+    assert.equal(snapshot.records[0].source_state, 'ACTIVE')
   } finally { await rm(dir, { recursive: true, force: true }) }
 })
 
@@ -59,19 +55,29 @@ test('source configuration errors are explicit and malformed SSH targets are rej
   } finally { await rm(dir, { recursive: true, force: true }) }
 })
 
-test('harness lifecycle data is read from SQLite in read-only mode and partial source errors stay visible', async () => {
-  const dir = await mkdtemp(join(tmpdir(), 'agenthud-harness-'))
+test('only fresh board members appear, harness input is ignored, and each state group sorts newest first', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'agenthud-current-'))
   try {
-    const database = join(dir, 'index.db'), log = join(dir, 'events.jsonl'), config = join(dir, 'config.json')
-    await writeFile(log, JSON.stringify({ payload: { event: { kind: 'terminal', terminal: 'failed', reason: 'Provider request ended' } } }))
-    execFileSync('python3', ['-c', 'import sqlite3,sys,time; c=sqlite3.connect(sys.argv[1]); c.execute("create table sessions(session_id, session_name, title, session_log_path, updated_at_us)"); c.execute("insert into sessions values(?,?,?,?,?)", ("sample-session", "Sample", "Read report", sys.argv[2], int(time.time()*1000000))); c.commit(); c.close()', database, log])
-    const before = createHash('sha256').update(await readFile(database)).digest('hex')
-    await writeFile(config, JSON.stringify({ harness_index: database, board_registry: join(dir, 'missing-board.md') }))
+    const now = Date.now(), registry = join(dir, 'board.md'), config = join(dir, 'config.json')
+    const entries = [['Old working', 'ACTIVE', 100], ['New parked', 'PARKED', 5], ['New working', 'ACTIVE', 2], ['Aged', 'ACTIVE', 1000], ['Closed', 'CLOSED', 1], ['Missing', 'MISSING', 1], ['Old parked', 'PARKED', 200]]
+    let content = '| Session | State | Task | Transcript |\n|---|---|---|---|\n'
+    for (const [name, state, seconds] of entries) {
+      const log = join(dir, name + '.jsonl')
+      await writeFile(log, JSON.stringify({ timestamp: new Date(now - seconds * 1000).toISOString(), type: 'event_msg', payload: { type: 'task_started' } }))
+      content += `| ${name} | ${state} | Task | ${log} |\n`
+    }
+    await writeFile(registry, content)
+    const ignored = join(dir, 'test-index.db')
+    await writeFile(ignored, 'not a database; must never be read')
+    await writeFile(config, JSON.stringify({ board_registry: registry, harness_index: ignored, stale_after_seconds: 900 }))
     const snapshot = await loadFleet(config)
-    assert.equal(snapshot.records[0].state, 'failed')
-    assert.equal(snapshot.records[0].last_output, 'Provider request ended')
-    assert.equal(snapshot.source_errors[0].source, 'board')
-    assert.equal(createHash('sha256').update(await readFile(database)).digest('hex'), before)
+    assert.deepEqual(snapshot.records.map(r => r.name), ['New working', 'Old working', 'New parked', 'Old parked'])
+    assert.equal(snapshot.sources.length, 1)
+    assert.equal(snapshot.sources[0].inspected_records, 7)
+    assert.ok(snapshot.records.every(r => !r.source_stale && r.source === 'board'))
+    assert.deepEqual(snapshot.source_errors, [])
+    assert.equal(await readFile(registry, 'utf8'), content)
+    assert.equal(await readFile(ignored, 'utf8'), 'not a database; must never be read')
   } finally { await rm(dir, { recursive: true, force: true }) }
 })
 

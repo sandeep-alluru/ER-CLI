@@ -29,6 +29,9 @@ Model requests use your configured Claude provider.
 
 ## News
 
+- **2026-11-01 — AgentHUD 0.2.1:** one session per tile, tap-to-detail,
+  steady page turns and instruction review. [Build and controls](docs/AGENTHUD.md).
+
 - **2026-10-30 — AgentHUD fleet build:** read CLI session snapshots in a
   paginated list beside Ask. [Setup and transport measurements](docs/AGENTHUD.md).
 - **2026-10-25 — v0.1.3:** G2 Claude app, authenticated Node bridge, desktop

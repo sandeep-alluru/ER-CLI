@@ -1,121 +1,97 @@
 # AgentHUD
 
-Read your CLI fleet from Even G2. AgentHUD reads session status from configured
-sources and displays a measured line per session. The phone companion connects
-to the same authenticated Node bridge as Ask.
+Read your CLI fleet from Even G2. Each page gives one session room: a large
+name, its state in plain words, and a line about its task. Tap to read more.
 
-## Source setup
+## Connect a board
 
 Save a private JSON file outside the checkout:
 
 ```json
 {
   "board_registry": "/path/to/SESSIONS.md",
-  "harness_index": "/path/to/session-index.db",
   "stale_after_seconds": 900
 }
 ```
 
-Use either source or both. The board adapter reads Markdown columns `Session`,
-`State`, `Task`, `Transcript`, and optional `Expected output`, `Role`, `Decision`.
-The harness adapter reads the session index and lifecycle records used by Muse.
-For a remote source machine, add `"ssh_target": "fleet-host"`, using an existing
-SSH alias and source paths on that machine.
+The board uses Markdown columns `Session`, `State`, `Task`, `Transcript`, with
+optional `Expected output` and `Decision`. Its state decides membership. Current
+working and parked sessions appear; completed and closed sessions leave the
+list. Activity older than the configured window leaves the list too. Transcript
+events supply activity timestamps and recent output. Working sessions come
+first, followed by parked sessions, newest activity first in each group.
 
-The collector uses Python 3 and its standard library. Remote reads use OpenSSH
-with noninteractive authentication.
+For a remote board, add `"ssh_target": "fleet-host"`, using your existing SSH
+alias and paths on that host. The collector uses Python 3 and OpenSSH.
 
 ```bash
 chmod 600 /path/to/fleet-sources.json
 AGENTHUD_FLEET_CONFIG=/path/to/fleet-sources.json npm run bridge
 ```
 
-On a managed workstation, use its service launcher to run that command.
+Use your workstation's service launcher for a persistent bridge. Pair your
+phone with the code printed by the bridge. The phone and bridge need a shared
+network route.
 
-Every record contains a name, state, current task, last artifact/output, pending
-decision, source and timestamp. States are `working`, `parked`, `done`, `failed`
-and `needs-decision`. Explicit lifecycle events supplement board snapshots.
-Artifacts include a filename, modification timestamp and byte size when present.
-`~` marks activity older than the configured freshness window. The recorded
-state and its timestamp stay together.
+## Lens controls
 
-## Package for your bridge
+| Where | Tap | Scroll | Double-tap |
+| --- | --- | --- | --- |
+| Fleet tile | Open session detail | Previous / next session | Exit prompt |
+| Session detail | Open phone dictation | Read detail pages | Fleet |
+| Instruction review | Read next page, then confirm send | Read transcript pages | Cancel to detail |
+| Instruction response | Read the response | Read response pages | Detail |
 
-Use an HTTPS bridge base URL reachable from the phone:
+Refresh is a phone button. Page turns and returning to the foreground redraw
+the selected page without fetching or resetting the list.
+
+The name is drawn at 36 pixels across four image strips. Native text holds the
+state, task and controls within the 576 × 288 display. Frames are serialized so
+a slower display update cannot replace a later page.
+
+## Dictate and review
+
+Open a session's detail, then choose **Dictate instruction**. Use the microphone
+on your phone keyboard in the existing companion text field. Your words appear
+on the lens. Choose **Review instruction**, read all pages, then tap **Confirm
+send**. Previewing or editing the words does not send them.
+
+The paired Ask route passes the confirmed words and selected session name to
+your installed Claude CLI. It requests delivery through that existing local
+session's input interface and verification in its transcript. Its response is
+shown on the lens. The CLI uses your configured tools and permissions.
+
+## Build
 
 ```bash
 AGENTHUD_BRIDGE_URL=https://bridge.example/g2 npm run pack:agenthud
 ```
 
-This produces `agenthud-0.2.0.ehpk`. The packager adds that exact HTTPS origin to
-the network permission whitelist and embeds the bridge default in the app. It
-keeps SDK 0.0.14 and minimum Even app 2.2.9. AgentHUD uses the existing app
-identifier and storage keys, with a separate manifest and build command.
+This creates `agenthud-0.2.1.ehpk`, using SDK 0.0.14 and minimum Even app 2.2.9.
+The exact HTTPS origin is added to the package network whitelist. AgentHUD
+retains the app identifier and pairing storage used by the earlier build.
 
 [Even Hub networking](https://hub.evenrealities.com/docs/build/networking)
-describes the origin whitelist and browser CORS checks. The bridge serves CORS
-preflight for authenticated requests. A proxy must forward `/fleet`,
-`/fleet/render-receipts`, `/health`, `/pair`, `/ask`, `/log` and `OPTIONS`.
+describes origin permissions and CORS. The bridge serves authenticated fleet,
+display observations and Ask through the same base address.
 
-Install through Even Hub Private builds. Open AgentHUD, use **Bridge address →
-Save & test**, and pair using a current bridge code. A paired AgentHUD build
-opens the fleet. **Ask Claude** returns to the existing phone prompt form.
-
-## Fleet controls
-
-| Control | Result |
-| --- | --- |
-| Scroll down / up | Next / previous fleet page |
-| Single tap | Read a fresh snapshot |
-| Double-tap | Exit |
-| Phone Refresh fleet | Read a fresh snapshot |
-
-The layout uses eight session lines, a title and a footer in the 576 × 288
-container. Text is fitted using Pretext glyph measurements within 568 pixels.
-The bridge caches concurrent source reads for five seconds; the active phone
-view refreshes every fifteen seconds.
-
-Fleet requests read source files. Display observations are saved separately in
-`~/.config/agenthud/receipts/renders.jsonl`, or `AGENTHUD_RECEIPT_DIR`.
-
-## Measurements
-
-[Transport receipt](receipts/agenthud-transport.json) records the configured
-source counts, source timestamps, snapshot hash, submitted-frame hashes and SDK
-observations from the desktop browser. Private fleet names and frame contents
-stay in the configured proof directory.
+## Simulator measurements
 
 ```bash
 npm run test:agenthud
 npm run typecheck
 npm run check:agenthud
+AGENTHUD_PROOF_DIR=/path/to/new-private-proof \
+AGENTHUD_PROOF_TARGET=your-existing-local-session \
+node scripts/prove-agenthud-simulator.mjs
 ```
 
-To repeat the browser run against your real sources:
+The proof uses the official simulator, Xvfb on Linux, and local board cases for
+repeatable controls. It reads the native framebuffer and saves the bridge's
+render receipts. Its instruction test targets the named existing local session
+through the real Ask route. Production board snapshots are recorded separately
+from these interface cases.
 
-```bash
-npx playwright install chromium
-AGENTHUD_FLEET_CONFIG=/path/to/fleet-sources.json \
-AGENTHUD_PROOF_DIR=/path/to/private-proof \
-node scripts/prove-agenthud.mjs
-```
-
-The proof opens the real app, pairs, reads the feed, pages the list and sends
-an Ask through the installed Claude CLI. Its private output contains source and
-frame content; the public receipt contains hashes and measurements.
-
-## G2 recording
-
-Use the installed app with the bridge console visible. Correlate its fleet
-snapshot ID with `renders.jsonl`; record the actual lens text, page changes,
-refresh and double-tap exit. The SDK receipt records the app's device-model and
-display acknowledgement observations. Keep the recording and its timestamp with
-the matching source and render receipts.
-
-## Next
-
-G2 fleet recording, one-line Muse summaries, and an Agent detail view.
-
-[Source adapter](../bridge/collect_fleet.py) ·
-[Read-only API](../bridge/fleet.mjs) ·
-[Layout](../src/lib/fleet.ts)
+[Measurements](receipts/agenthud-transport.json) contain frame hashes and layout
+results. Private session names, frame text, screenshots and instruction content
+stay in the selected proof directory.
