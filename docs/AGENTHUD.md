@@ -9,17 +9,20 @@ Save a private JSON file outside the checkout:
 
 ```json
 {
-  "board_registry": "/path/to/SESSIONS.md",
-  "stale_after_seconds": 900
+  "board_registry": "/path/to/SESSIONS.md"
 }
 ```
 
 The board uses Markdown columns `Session`, `State`, `Task`, `Transcript`, with
 optional `Expected output` and `Decision`. Its state decides membership. Current
 working and parked sessions appear; completed and closed sessions leave the
-list. Activity older than the configured window leaves the list too. Transcript
+list. Transcript
 events supply activity timestamps and recent output. Working sessions come
-first, followed by parked sessions, newest activity first in each group.
+first, followed by parked sessions, newest activity first in each group. The
+list selects the 24 most recent live rows before grouping them. If the board
+has no live rows, it shows the 16 most recent registered rows instead. Board
+membership is independent of the harness liveness window. Missing probes and
+terminal history leave the live list.
 
 For a remote board, add `"ssh_target": "fleet-host"`, using your existing SSH
 alias and paths on that host. The collector uses Python 3 and OpenSSH.
@@ -94,5 +97,8 @@ through the real Ask route. Production board snapshots are recorded separately
 from these interface cases.
 
 [Measurements](receipts/agenthud-transport.json) contain frame hashes and layout
-results. Private session names, frame text, screenshots and instruction content
+results. [Tile and control measurements](receipts/agenthud-0.2.1-interface.json) retain
+the earlier interface run and its source revision.
+
+Private session names, frame text, screenshots and instruction content
 stay in the selected proof directory.

@@ -70,12 +70,21 @@ def transcript_activity(path):
         if kind in ("request_user_input", "approval_requested"):
             decision = clean(payload.get("question") or payload.get("message")) or None
         output = clean(payload.get("last_agent_message")) or output
-    return {"timestamp": timestamp, "decision": decision, "output": output}
+    return {"timestamp": timestamp or p.stat().st_mtime, "decision": decision, "output": output}
+
+
+def row_timestamp(row, fallback):
+    for key in ("Last activity", "Updated at", "Updated", "Started"):
+        try:
+            value = datetime.fromisoformat(row.get(key, "").replace("Z", "+00:00"))
+            return value.replace(tzinfo=value.tzinfo or timezone.utc).timestamp()
+        except ValueError:
+            pass
+    return fallback
 
 
 def collect(config):
     now = time.time()
-    stale_after = config.get("stale_after_seconds", 900)
     records, sources, errors = [], [], []
     board = config.get("board_registry")
     if board:
@@ -83,7 +92,6 @@ def collect(config):
             p = Path(board).expanduser()
             st = p.stat()
             text = p.read_text()
-            stale = now - st.st_mtime > stale_after
             parsed = rows(text)
             for row in parsed:
                 name = clean(row["Session"], 120)
@@ -96,14 +104,9 @@ def collect(config):
                     "FAILED": "failed", "ERROR": "failed",
                     "NEEDS_DECISION": "needs-decision", "WAITING_INPUT": "needs-decision",
                     "PARKED": "parked", "IDLE": "parked", "WAITING": "parked",
-                }.get(state)
-                if normalized not in ("working", "parked", "needs-decision"):
-                    continue
+                }.get(state, "parked")
                 activity = transcript_activity(row["Transcript"])
-                updated = activity["timestamp"] if activity and activity["timestamp"] else st.st_mtime
-                record_stale = now - updated > stale_after
-                if record_stale:
-                    continue
+                updated = activity["timestamp"] if activity and activity["timestamp"] else row_timestamp(row, st.st_mtime)
                 records.append({
                     "id": "board:" + name,
                     "name": name, "state": normalized,
@@ -112,9 +115,9 @@ def collect(config):
                     "last_output": activity["output"] if activity else None,
                     "pending_decision": (activity["decision"] if activity and activity["decision"] else clean(row.get("Decision")) or None) if normalized == "needs-decision" else None,
                     "updated_at": iso(updated), "source": "board",
-                    "source_state": state, "source_stale": record_stale,
+                    "source_state": state, "source_stale": False,
                 })
-            sources.append({"name": "board", "updated_at": iso(st.st_mtime), "stale": stale, "records": len(records), "inspected_records": len(parsed), "sha256": hashlib.sha256(text.encode()).hexdigest()})
+            sources.append({"name": "board", "updated_at": iso(st.st_mtime), "records": len(records), "inspected_records": len(parsed), "sha256": hashlib.sha256(text.encode()).hexdigest()})
         except (OSError, ValueError) as e:
             errors.append({"source": "board", "error": type(e).__name__})
 
@@ -125,8 +128,20 @@ def collect(config):
         if record["id"] in seen:
             raise ValueError("duplicate session identifier")
         seen.add(record["id"])
-    priority = {"working": 0, "parked": 1, "needs-decision": 1}
-    records.sort(key=lambda r: (priority[r["state"]], -datetime.fromisoformat(r["updated_at"]).timestamp(), r["id"]))
+    if not records:
+        raise ValueError("board registry has no rows")
+    live_states = {"ACTIVE", "RUNNING", "WORKING", "PARKED", "IDLE", "WAITING"}
+    live = [r for r in records if r["source_state"] in live_states]
+    newest = lambda r: (-datetime.fromisoformat(r["updated_at"]).timestamp(), r["id"])
+    if live:
+        priority = {"working": 0, "parked": 1}
+        records = sorted(live, key=newest)[:24]
+        records.sort(key=lambda r: (priority[r["state"]], *newest(r)))
+        selection = "live"
+    else:
+        records = sorted(records, key=newest)[:16]
+        selection = "recent"
+    sources[0].update(records=len(records), live_records=len(live), selection=selection)
     digest = hashlib.sha256(json.dumps({"records": records, "sources": sources}, sort_keys=True).encode()).hexdigest()
     return {"schema_version": 1, "snapshot_id": digest, "generated_at": iso(now), "records": records, "sources": sources, "source_errors": errors}
 
