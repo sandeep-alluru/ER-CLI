@@ -1,0 +1,83 @@
+{
+  "schema_version": 2,
+  "app_version": "0.2.1",
+  "observation_kind": "official_simulator",
+  "simulator_version": "0.9.5",
+  "started_at": "2026-11-01T06:41:25.518Z",
+  "completed_at": "2026-11-01T06:41:30.577Z",
+  "snapshot_id": "88d45a2688dd22f0d6433685a75216690f232115925ef2a9042c462490c0f40c",
+  "records": 10,
+  "records_sha256": "b502c591200b23d38925d433fc47cbce4e2e99851e2920ca7fb95790e071082a",
+  "source_counts": [
+    {
+      "name": "board",
+      "records": 10,
+      "updated_at": "2026-11-01T03:06:17.677101+00:00"
+    }
+  ],
+  "production_before_records": 0,
+  "stale_records": 0,
+  "interface_source": "Authoritative board records",
+  "board_selection": {
+    "selection": "live",
+    "registered_rows": 72,
+    "live_rows": 10,
+    "live_limit": 24,
+    "recent_fallback_limit": 16,
+    "age_filter": false
+  },
+  "layout": {
+    "screen_width_px": 576,
+    "screen_height_px": 288,
+    "text_width_px": 568,
+    "body_lines": 9,
+    "name_font_px": 36,
+    "max_observed_line_width_px": 262
+  },
+  "frames": [
+    {
+      "snapshot_id": "88d45a2688dd22f0d6433685a75216690f232115925ef2a9042c462490c0f40c",
+      "frame_sha256": "3bf11be6d2e779b3f615d70b8dfabf95e57bd8b8d37c561b39ee32c291a4fcad",
+      "received_at": "2026-11-01T06:41:30.500Z",
+      "sdk_accepted": true,
+      "runtime": "even-hub",
+      "device_model": "g2",
+      "line_count": 10
+    }
+  ],
+  "browser_page_errors": 0,
+  "physical_observation": null,
+  "source_sha256": {
+    "app.agenthud.json": "0ebb768f2fba18875e2998d8d589988fddd0560a74c206a98e066340543bf25d",
+    "app.json": "e44f85cb3c4f7237ce4f0fb493d5207fae2b73fccbd918d2bb8d225c496135fa",
+    "bridge/auth.mjs": "4a876df3bc7c54ed655d7720206767d31994fcc1c3b7de1dc88c42f71cdf2414",
+    "bridge/collect_fleet.py": "2bdd59778efe932b8e564eda9c1e0b01eab5fa465d790f934df95ff28b4c9d6a",
+    "bridge/fleet.mjs": "3b6d40d7507f057f65f2ae748bb4ba5e1bd19b206280634006838a5981121efc",
+    "bridge/server.mjs": "1e4aef3d282fb81976f672b9191e49817832bb5839468ffb2bd7420d4cbe9bea",
+    "index.html": "525ffec81242c628db492a01464577860e370f6baccbb2e2ec9fd11acf21de76",
+    "package-lock.json": "89c9727ceb4b6439bf263bc504def092238cc79fa5dab69a370da0f41b6b7344",
+    "package.json": "273090e05757632689a54f563a2dc3ce9d3bce4e89bf9c2922a6802ce80022b2",
+    "scripts/check-agenthud.mjs": "336cfc5a860ac777151681092e41796c535cd378cf7be65d09114db6eb37cc35",
+    "scripts/check-evidence.mjs": "f08412d33cefe1b90f904c6aee2047fe81cc0e027da6b84d0112f91961acd735",
+    "scripts/pack-agenthud.mjs": "715a7f45c117388b34de880dde18820acf1866489974faea5fd3c0896e740adf",
+    "scripts/prove-agenthud-simulator.mjs": "fe52f5e2e11a2c3c95aef9c32271d8dd27a7848211a6b587cd6627f7e68535cf",
+    "scripts/prove-agenthud.mjs": "876fd97b814f56d19d53d0d15c3b0c8a306eceb835588f5402a1cc0b0be0d43e",
+    "scripts/write-agenthud-receipt.mjs": "a8fc338078b8d98023e168cc1af92cfea63bdb66a3b66d3d470e977671ba54ab",
+    "src/fleet.ts": "384446fa00fe07122c60719fbc2d57e6d54c38b969f4069a63f69cd44c257e8e",
+    "src/glasses.ts": "57b1a7880153538e1a422eb302d2f3f2ecd06333a7a58130efa06adb3def701c",
+    "src/lib/bridge.ts": "065b1cf74d68fd8914faef2244fba43db0f0da397a4950d7b3bc5e1c389ac9f5",
+    "src/lib/fleet.ts": "5d1943c575f39e2bcef1c0da3f5a57d9c5d45e4f33daa073f9cbe3fa75a85ba5",
+    "src/lib/gestures.ts": "03572bc9e1a1592f53d6b7d39f098b4c1b3cbb7e9823eab2cacc978ff69a90f3",
+    "src/lib/store.ts": "4bbfd19e771d15754cb0013f2fd7f9504f9e97e40390b1c9d385026f1e50196d",
+    "src/lib/text.ts": "8763e78d44c8f9835b3081e11686ae75be1a2d7b342a08e193e7377ccac79048",
+    "src/main.ts": "0a85332b4330449434cbf01b7dac107822b9ddd6702bd6b7d9d2917ecbe9c673",
+    "src/phone.ts": "04fe9cfa69af646bb50239cf8640198ab620afbb4f1b74716b2220530ac69769",
+    "src/vite-env.d.ts": "65996936fbb042915f7b74a200fcdde7e410f32a669b1ab9597cfaa4b0faddb5",
+    "tests/fleet-layout.test.mjs": "ffb5b6861857e5c1f243f1c71ea0a39f453b7627234ce27723212a545c524cd8",
+    "tests/fleet-server.test.mjs": "99279cf6be41059fe5fb8ce71c64239d500b97fd8015d658826751f018b1eeb4",
+    "tests/fleet.test.mjs": "3d261927a61c32eb2b5485eb4e09bf6727e979d6b81e9807e1dbfae105ba47eb",
+    "tsconfig.json": "96d6ac2cdd5e0dfb7b27080b606c6ce1e5d900f8f8baed4f10e30387ec8f03be",
+    "vite.config.ts": "72c661bba2d7f465d61c4eaa45c60418a09b23dc3e69695f9e2eeea83c8bc982"
+  },
+  "source_commit": "62d1a2a"
+}

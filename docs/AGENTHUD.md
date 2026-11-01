@@ -86,8 +86,11 @@ npm run typecheck
 npm run check:agenthud
 AGENTHUD_PROOF_DIR=/path/to/new-private-proof \
 AGENTHUD_PROOF_TARGET=your-existing-local-session \
-node scripts/prove-agenthud-simulator.mjs
+node scripts/prove-agenthud-simulator.mjs --controls-only
 ```
+
+Use `--controls-only` for tile and page-turn measurements. Omit it to exercise
+confirmed instruction delivery to the named existing session.
 
 The proof uses the official simulator, Xvfb on Linux, Python with Pillow for
 framebuffer checks, and local board cases for
@@ -97,7 +100,8 @@ through the real Ask route. Production board snapshots are recorded separately
 from these interface cases.
 
 [Measurements](receipts/agenthud-transport.json) contain frame hashes and layout
-results. [Tile and control measurements](receipts/agenthud-0.2.1-interface.json) retain
+results. [Board measurements](receipts/agenthud-0.2.1-board.json) record the
+authoritative fleet separately from the interface cases. [Tile and control measurements](receipts/agenthud-0.2.1-interface.json) retain
 the earlier interface run and its source revision.
 
 Private session names, frame text, screenshots and instruction content

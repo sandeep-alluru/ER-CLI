@@ -21,4 +21,4 @@ for (const frame of receipt.frames) {
 for (const [path, digest] of Object.entries(receipt.source_sha256)) {
   assert.equal(createHash('sha256').update(await readFile(path)).digest('hex'), digest, `Source fingerprint changed: ${path}`)
 }
-console.log(`Verified ${receipt.records} production source records, ${receipt.frames.length} ${receipt.observation_kind} frames and source fingerprints.`)
+console.log(`Verified ${receipt.records} observed source records, ${receipt.frames.length} ${receipt.observation_kind} frames and source fingerprints.`)

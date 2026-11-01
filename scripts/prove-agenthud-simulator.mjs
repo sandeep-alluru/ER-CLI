@@ -7,6 +7,7 @@ import assert from 'node:assert/strict'
 
 const output = resolve(process.env.AGENTHUD_PROOF_DIR || '')
 const target = process.env.AGENTHUD_PROOF_TARGET
+const controlsOnly = process.argv.includes('--controls-only')
 if (!process.env.AGENTHUD_PROOF_DIR || !target || !/^[a-zA-Z0-9_.-]+$/.test(target)) throw Error('Set AGENTHUD_PROOF_DIR and AGENTHUD_PROOF_TARGET to an existing local tmux session')
 execFileSync('tmux', ['has-session', '-t', target])
 await mkdir(output, { recursive: true, mode: 0o700 })
@@ -37,7 +38,7 @@ const driver = `<script type="module">(async()=>{for(;;){try{const r=await fetch
 let fleetReads = 0, asks = []
 const fixtureBoard = join(output, 'fixture-board.md'), config = join(output, 'fixture-config.json')
 // These are UI test cases, never the production feed or its portal-set proof.
-const fixtureRows = [[target, 'ACTIVE', 'Continue the current app build'], ['Tile case B', 'ACTIVE', 'Compile the next package'], ['Tile case C', 'PARKED', 'Waiting for a review']]
+const fixtureRows = [[target, 'ACTIVE', 'Review the latest build output and prepare the next measured change. '.repeat(5)], ['Tile case B', 'ACTIVE', 'Compile the next package'], ['Tile case C', 'PARKED', 'Waiting for a review']]
 let boardText = '| Session | State | Task | Transcript |\n|---|---|---|---|\n'
 for (const [i, [name, state, task]] of fixtureRows.entries()) {
   const log = join(output, `fixture-activity-${i}.jsonl`)
@@ -95,7 +96,13 @@ try {
   assert.equal((await latest()).lines.join('\n'), first.lines.join('\n'), 'Page remains steady beyond old poll interval')
   phase = 'tap-detail'
   await input('click', 'Agent detail'); await capture('06-tap-detail')
-  await input('double_click', 'AgentHUD · Fleet'); await capture('07-double-back')
+  const firstDetail = await latest()
+  await input('down', 'Agent detail'); await capture('07-detail-next')
+  assert.notEqual((await latest()).lines.join('\n'), firstDetail.lines.join('\n'), 'Detail scroll must change the page')
+  await input('up', 'Agent detail'); await capture('08-detail-previous')
+  assert.equal((await latest()).lines.join('\n'), firstDetail.lines.join('\n'))
+  await input('double_click', 'AgentHUD · Fleet'); await capture('09-double-back')
+  if (!controlsOnly) {
   await input('click', 'Agent detail')
   await input('click', 'Dictate on your phone'); await capture('08-compose')
   phase = 'voice-review'
@@ -115,6 +122,8 @@ try {
   await until(async () => (await latest())?.lines[0] === 'Instruction response', 195000)
   await capture('12-instruction-response')
   assert.equal(asks.length, 1, 'Exactly one confirmed send')
+  }
+  if (controlsOnly) assert.equal(asks.length, 0, 'Controls proof must not attempt delivery')
   phase = 'existing-ask-return'
   await drive(`[...document.querySelectorAll('button')].find(b=>b.textContent==='Ask Claude').click();return true`)
   await pause(1000)
@@ -122,7 +131,7 @@ try {
   execFileSync('python3', ['-c', "from PIL import Image; import sys; im=Image.open(sys.argv[1]); assert im.size==(576,288) and im.mode=='RGBA'; assert any(v>0 for v in im.getchannel('A').crop((0,54,576,82)).getdata()), 'Tile images obscured the Ask body'", join(output, '13-existing-ask.png')])
   const consoleResponse = await fetch(simBase + '/api/console'); await record('console.json', await consoleResponse.json())
   const all = await frames()
-  await record('simulator-receipt.json', { started_at: started, completed_at: new Date().toISOString(), runtime: 'official-evenhub-simulator', simulator_version: '0.9.5', source: 'Local UI fixture; production before/after recorded separately', frames: all.length, sdk_accepted: all.every(f=>f.sdk_accepted), fleet_reads: fleetReads, confirmed_sends: asks.length, existing_ask_body_visible: true, events, physical_microphone: 'pending', receiving_transcript: 'Verify independently against instruction.json before claiming delivery' })
+  await record('simulator-receipt.json', { started_at: started, completed_at: new Date().toISOString(), runtime: 'official-evenhub-simulator', simulator_version: '0.9.5', controls_only: controlsOnly, source: 'Local UI fixture; production before/after recorded separately', frames: all.length, sdk_accepted: all.every(f=>f.sdk_accepted), fleet_reads: fleetReads, confirmed_sends: asks.length, existing_ask_body_visible: true, events, physical_microphone: 'pending', receiving_transcript: controlsOnly ? 'Not attempted in the controls proof' : 'Verify independently against instruction.json before claiming delivery' })
   console.log(JSON.stringify({ frames: all.length, fleet_reads: fleetReads, confirmed_sends: asks.length, output }))
 } catch (error) {
   await record('blocker.json', { phase, observed_at: new Date().toISOString(), error: error.message })
